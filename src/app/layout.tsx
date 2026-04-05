@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_SITE_TITLE ?? "Our Home",
+  title: process.env.NEXT_PUBLIC_SITE_TITLE ?? "Oracle",
   description: "A household portal for everyday tracking and planning",
 };
 

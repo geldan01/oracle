@@ -1,11 +1,11 @@
 import { test, expect } from "./fixtures";
 
 test.describe("Dashboard", () => {
-  test("displays the Our Home heading and widgets", async ({ adminPage }) => {
+  test("displays the Oracle heading and widgets", async ({ adminPage }) => {
     await adminPage.goto("/dashboard");
 
     await expect(
-      adminPage.getByRole("heading", { name: "Our Home" })
+      adminPage.getByRole("heading", { name: "Oracle" })
     ).toBeVisible();
 
     await expect(adminPage.getByText("Shared Todos")).toBeVisible();

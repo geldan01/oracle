@@ -13,7 +13,7 @@ export default async function Header() {
           href="/dashboard"
           className="text-2xl font-bold tracking-tight text-amber-950 dark:text-amber-50"
         >
-          {process.env.NEXT_PUBLIC_SITE_TITLE ?? "Our Home"}
+          {process.env.NEXT_PUBLIC_SITE_TITLE ?? "Oracle"}
         </Link>
 
         {session?.user && (

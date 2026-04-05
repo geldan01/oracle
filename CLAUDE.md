@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## App Context
 
-**Our Home** is a household web portal that consolidates everyday tracking tools into a single dashboard. The target users are members of a household who want a shared space to manage daily life.
+**Oracle** is a household command center and agent hub that consolidates everyday tracking tools into a single dashboard. The target users are members of a household who want a shared space to manage daily life — and a future control center for AI agents.
 
 ### Features
 
