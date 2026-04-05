@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  hashedPassword String
+  role           Role     @default(MEMBER)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdTodoLists    TodoList[]               @relation("CreatedTodoLists")
+  createdTodoItems    TodoItem[]               @relation("CreatedTodoItems")
+  todoListPreferences UserTodoListPreference[]
+}
+
+model TodoList {
+  id          String                   @id @default(cuid())
+  name        String
+  createdById String
+  createdBy   User                     @relation("CreatedTodoLists", fields: [createdById], references: [id])
+  items       TodoItem[]
+  preferences UserTodoListPreference[]
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+}
+
+model TodoItem {
+  id          String   @id @default(cuid())
+  text        String
+  done        Boolean  @default(false)
+  position    Int      @default(0)
+  listId      String
+  list        TodoList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User     @relation("CreatedTodoItems", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserTodoListPreference {
+  id              String   @id @default(cuid())
+  showOnDashboard Boolean  @default(true)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  listId          String
+  list            TodoList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listId])
+}
