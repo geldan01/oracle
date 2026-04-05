@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { promoteToAdmin, demoteToMember } from "@/lib/auth-actions";
+import { removeWeatherCity, setPrimaryCity } from "@/lib/weather-actions";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/generated/prisma";
+import WeatherCitySearch from "@/components/WeatherCitySearch";
 
 function PromoteButton({ userId }: { userId: string }) {
   const promoteAction = promoteToAdmin.bind(null, userId);
@@ -34,6 +36,34 @@ function DemoteButton({ userId }: { userId: string }) {
   );
 }
 
+function SetPrimaryButton({ cityId }: { cityId: string }) {
+  const action = setPrimaryCity.bind(null, cityId);
+  return (
+    <form action={action}>
+      <button
+        type="submit"
+        className="rounded-md bg-sky-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
+      >
+        Set Primary
+      </button>
+    </form>
+  );
+}
+
+function RemoveCityButton({ cityId }: { cityId: string }) {
+  const action = removeWeatherCity.bind(null, cityId);
+  return (
+    <form action={action}>
+      <button
+        type="submit"
+        className="rounded-md bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
+      >
+        Remove
+      </button>
+    </form>
+  );
+}
+
 export default async function AdminPage() {
   const session = await auth();
 
@@ -42,6 +72,9 @@ export default async function AdminPage() {
   }
 
   const currentUser = session.user;
+  const weatherCities = await prisma.weatherCity.findMany({
+    orderBy: { position: "asc" },
+  });
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -143,6 +176,76 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* ── Weather Cities ── */}
+        <div className="rounded-lg bg-white shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+          <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Weather Cities
+            </h2>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Configure which cities appear on the weather widget. The primary
+              city is shown on the dashboard.
+            </p>
+          </div>
+
+          <div className="px-6 py-4">
+            <WeatherCitySearch />
+          </div>
+
+          {weatherCities.length > 0 && (
+            <div className="overflow-x-auto border-t border-zinc-200 dark:border-zinc-800">
+              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+                <thead>
+                  <tr className="bg-zinc-50 dark:bg-zinc-800/50">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      City
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Country
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                  {weatherCities.map((city) => (
+                    <tr
+                      key={city.id}
+                      className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
+                    >
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-900 dark:text-zinc-100">
+                        {city.name}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
+                        {city.country}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        {city.isPrimary && (
+                          <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-400">
+                            Primary
+                          </span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {!city.isPrimary && (
+                            <SetPrimaryButton cityId={city.id} />
+                          )}
+                          <RemoveCityButton cityId={city.id} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

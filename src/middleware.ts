@@ -18,8 +18,8 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Protected: /dashboard and /admin require authentication
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
+  // Protected: /dashboard, /admin, and /weather require authentication
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname.startsWith("/weather")) {
     if (!isLoggedIn) {
       const loginUrl = new URL("/login", req.nextUrl.origin);
       return NextResponse.redirect(loginUrl);
@@ -38,5 +38,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/weather/:path*", "/login", "/register"],
 };
