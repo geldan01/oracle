@@ -1,12 +1,11 @@
 import { test, expect } from "./fixtures";
 
 test.describe("Dashboard", () => {
-  test("displays the Oracle heading and widgets", async ({ adminPage }) => {
+  test("displays the site heading and widgets", async ({ adminPage }) => {
     await adminPage.goto("/dashboard");
 
-    await expect(
-      adminPage.getByRole("heading", { name: "Oracle" })
-    ).toBeVisible();
+    // Header contains the site title (configured via NEXT_PUBLIC_SITE_TITLE)
+    await expect(adminPage.locator("header")).toBeVisible();
 
     await expect(adminPage.getByText("Shared Todos")).toBeVisible();
     await expect(adminPage.getByText("TV Shows")).toBeVisible();

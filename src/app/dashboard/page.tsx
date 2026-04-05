@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchWeather } from "@/lib/weather";
+import MealPlanWidget from "./meal-plan-widget";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -34,6 +35,16 @@ export default async function DashboardPage() {
 
   const primaryCity = await prisma.weatherCity.findFirst({
     where: { isPrimary: true },
+  });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayDate = today.toISOString().split("T")[0];
+
+  const todayMealEntries = await prisma.mealPlanEntry.findMany({
+    where: { date: today },
+    include: { meal: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
   });
 
   let weatherData = null;
@@ -233,29 +244,14 @@ export default async function DashboardPage() {
               )}
             </Link>
 
-            {/* ── Meal Planner ── Warm kitchen/terracotta style */}
-            <div className="relative overflow-hidden rounded-2xl border border-orange-200/80 bg-linear-to-br from-orange-50 to-rose-50 p-6 shadow-sm dark:border-orange-900/40 dark:from-orange-950/40 dark:to-rose-950/30">
-              <div className="absolute top-0 left-0 h-14 w-14 -translate-x-4 -translate-y-4 rounded-full bg-orange-200/40 dark:bg-orange-800/20" />
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500/15 text-2xl ring-1 ring-orange-500/20 dark:bg-orange-400/10 dark:ring-orange-400/20">
-                  <span role="img" aria-label="Meals">&#127858;</span>
-                </div>
-                <div>
-                  <h2 className="font-semibold text-orange-900 dark:text-orange-100">
-                    Meal Planner
-                  </h2>
-                  <p className="text-xs text-orange-700/60 dark:text-orange-300/50">
-                    Recipes &amp; weekly meals
-                  </p>
-                </div>
-              </div>
-              <div className="mt-5 flex flex-col items-center justify-center rounded-xl border border-dashed border-orange-300/60 py-8 dark:border-orange-700/40">
-                <p className="text-sm font-medium text-orange-400 dark:text-orange-500">Coming soon</p>
-                <p className="mt-1 text-xs text-orange-300 dark:text-orange-600">
-                  Save recipes &amp; plan meals
-                </p>
-              </div>
-            </div>
+            {/* ── Meal Planner ── Chalkboard style */}
+            <MealPlanWidget
+              todayEntries={todayMealEntries.map((e) => ({
+                id: e.id,
+                meal: { id: e.meal.id, name: e.meal.name },
+              }))}
+              todayDate={todayDate}
+            />
 
           </div>
 

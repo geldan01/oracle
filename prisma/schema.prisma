@@ -31,6 +31,9 @@ model User {
   createdTodoLists    TodoList[]               @relation("CreatedTodoLists")
   createdTodoItems    TodoItem[]               @relation("CreatedTodoItems")
   todoListPreferences UserTodoListPreference[]
+  createdMeals        Meal[]                   @relation("CreatedMeals")
+  mealRatings         MealRating[]             @relation("MealRatings")
+  addedMealPlanEntries MealPlanEntry[]          @relation("AddedMealPlanEntries")
 }
 
 model TodoList {
@@ -66,6 +69,76 @@ model UserTodoListPreference {
   list            TodoList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listId])
+}
+
+model Meal {
+  id          String       @id @default(cuid())
+  name        String
+  recipe      String?      @db.Text
+  imageUrl    String?
+  createdById String
+  createdBy   User         @relation("CreatedMeals", fields: [createdById], references: [id])
+  tags        MealTag[]
+  ratings     MealRating[]
+  ingredients MealIngredient[]
+  planEntries MealPlanEntry[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model MealTag {
+  id    String @id @default(cuid())
+  name  String @unique
+  meals Meal[]
+}
+
+model MealRating {
+  id     String @id @default(cuid())
+  rating Int
+  mealId String
+  meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation("MealRatings", fields: [userId], references: [id])
+
+  @@unique([mealId, userId])
+}
+
+model Ingredient {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  tags      IngredientTag[]
+  usages    MealIngredient[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model IngredientTag {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  ingredients Ingredient[]
+}
+
+model MealIngredient {
+  id           String      @id @default(cuid())
+  name         String
+  quantity     String?
+  mealId       String
+  meal         Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  ingredientId String?
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
+  position     Int         @default(0)
+}
+
+model MealPlanEntry {
+  id     String   @id @default(cuid())
+  date   DateTime @db.Date
+  mealId String
+  meal   Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  addedById String
+  addedBy   User   @relation("AddedMealPlanEntries", fields: [addedById], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([date, mealId])
 }
 
 model WeatherCity {
