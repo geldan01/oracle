@@ -18,6 +18,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=prisma /app/node_modules ./node_modules
 COPY . .
+COPY --from=prisma /app/src/generated ./src/generated
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
