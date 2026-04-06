@@ -69,11 +69,15 @@ export default async function DashboardPage() {
 
   // Deduplicate by show — keep only the first unwatched episode per show
   const seenShows = new Set<string>();
-  const dedupedEpisodes = upNextEpisodes.filter((ep) => {
-    if (seenShows.has(ep.season.show.id)) return false;
-    seenShows.add(ep.season.show.id);
-    return true;
-  });
+  const dedupedEpisodes = upNextEpisodes
+    .filter((ep) => {
+      if (seenShows.has(ep.season.show.id)) return false;
+      seenShows.add(ep.season.show.id);
+      return true;
+    })
+    .sort((a, b) =>
+      a.season.show.name.localeCompare(b.season.show.name),
+    );
 
   let weatherData = null;
   if (primaryCity) {

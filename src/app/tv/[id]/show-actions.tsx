@@ -1,13 +1,14 @@
 "use client";
 
 import { useTransition } from "react";
-import { updateShowStatus, removeShow, refreshShowData } from "@/lib/tv-actions";
+import { updateShowStatus, removeShow, refreshShowData, updateWatchMode } from "@/lib/tv-actions";
 import { useRouter } from "next/navigation";
-import { TvShowStatus } from "@/generated/prisma";
+import { TvShowStatus, WatchMode } from "@/generated/prisma";
 
 interface ShowActionsProps {
   showId: string;
   currentStatus: TvShowStatus;
+  watchMode: WatchMode;
 }
 
 const statuses: { value: TvShowStatus; label: string }[] = [
@@ -18,13 +19,19 @@ const statuses: { value: TvShowStatus; label: string }[] = [
   { value: "PLAN_TO_WATCH", label: "Plan to Watch" },
 ];
 
-export default function ShowActions({ showId, currentStatus }: ShowActionsProps) {
+export default function ShowActions({ showId, currentStatus, watchMode }: ShowActionsProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
     startTransition(async () => {
       await updateShowStatus(showId, e.target.value as TvShowStatus);
+    });
+  }
+
+  function handleWatchModeChange(mode: WatchMode) {
+    startTransition(async () => {
+      await updateWatchMode(showId, mode);
     });
   }
 
@@ -56,6 +63,35 @@ export default function ShowActions({ showId, currentStatus }: ShowActionsProps)
           </option>
         ))}
       </select>
+
+      {/* Watch mode toggle */}
+      <div className="inline-flex rounded-lg border border-violet-200 dark:border-violet-800">
+        <button
+          type="button"
+          onClick={() => handleWatchModeChange("INDIVIDUAL")}
+          disabled={isPending}
+          className={`rounded-l-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+            watchMode === "INDIVIDUAL"
+              ? "bg-violet-600 text-white dark:bg-violet-500"
+              : "bg-white text-violet-700 hover:bg-violet-50 dark:bg-stone-900 dark:text-violet-300 dark:hover:bg-violet-900/30"
+          }`}
+        >
+          Just Me
+        </button>
+        <button
+          type="button"
+          onClick={() => handleWatchModeChange("HOUSEHOLD")}
+          disabled={isPending}
+          className={`rounded-r-lg border-l border-violet-200 px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 dark:border-violet-800 ${
+            watchMode === "HOUSEHOLD"
+              ? "bg-violet-600 text-white dark:bg-violet-500"
+              : "bg-white text-violet-700 hover:bg-violet-50 dark:bg-stone-900 dark:text-violet-300 dark:hover:bg-violet-900/30"
+          }`}
+        >
+          Household
+        </button>
+      </div>
+
       <button
         type="button"
         onClick={handleRefresh}

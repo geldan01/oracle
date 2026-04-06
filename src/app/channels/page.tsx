@@ -1,30 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getChannels, createChannel, deleteChannel } from "@/lib/tv-actions";
-
-function DeleteButton({ id }: { id: string }) {
-  async function handleDelete() {
-    "use server";
-    await deleteChannel(id);
-  }
-  return (
-    <form action={handleDelete}>
-      <button
-        type="submit"
-        className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-      >
-        Remove
-      </button>
-    </form>
-  );
-}
+import { getChannels, createChannel } from "@/lib/tv-actions";
+import ChannelRow from "./channel-row";
 
 export default async function ChannelsPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
   const channels = await getChannels();
+  const isAdmin = session.user.role === "ADMIN";
 
   return (
     <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
@@ -67,15 +52,12 @@ export default async function ChannelsPage() {
         {channels.length > 0 ? (
           <ul className="divide-y divide-violet-100 rounded-xl border border-violet-200/80 bg-white dark:divide-violet-900/40 dark:border-violet-900/40 dark:bg-stone-900/60">
             {channels.map((channel) => (
-              <li
+              <ChannelRow
                 key={channel.id}
-                className="flex items-center justify-between px-5 py-3.5"
-              >
-                <span className="font-medium text-stone-800 dark:text-stone-200">
-                  {channel.name}
-                </span>
-                <DeleteButton id={channel.id} />
-              </li>
+                id={channel.id}
+                name={channel.name}
+                isAdmin={isAdmin}
+              />
             ))}
           </ul>
         ) : (

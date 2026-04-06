@@ -112,7 +112,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             {/* Status and actions */}
-            <ShowActions showId={show.id} currentStatus={show.status} />
+            <ShowActions showId={show.id} currentStatus={show.status} watchMode={show.watchMode} />
           </div>
         </div>
 

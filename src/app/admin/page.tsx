@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { promoteToAdmin, demoteToMember } from "@/lib/auth-actions";
 import { removeWeatherCity, setPrimaryCity } from "@/lib/weather-actions";
@@ -99,6 +100,12 @@ export default async function AdminPage() {
                 Signed in as {currentUser.name ?? currentUser.email} ({currentUser.role})
               </p>
             </div>
+            <Link
+              href="/channels"
+              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
+            >
+              Manage Channels
+            </Link>
           </div>
         </div>
 

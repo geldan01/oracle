@@ -151,6 +151,11 @@ enum TvShowStatus {
   PLAN_TO_WATCH
 }
 
+enum WatchMode {
+  INDIVIDUAL
+  HOUSEHOLD
+}
+
 model Channel {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -169,6 +174,7 @@ model TvShow {
   posterPath  String?
   backdropPath String?
   status      TvShowStatus @default(PLAN_TO_WATCH)
+  watchMode   WatchMode    @default(INDIVIDUAL)
   tmdbRating  Float?
   imdbRating  Float?
   firstAirDate DateTime?

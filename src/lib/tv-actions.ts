@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getShowDetails, getExternalIds, getSeasonDetails, searchShows as tmdbSearch, type TmdbSearchResult } from "@/lib/tmdb";
-import { TvShowStatus } from "@/generated/prisma";
+import { TvShowStatus, WatchMode } from "@/generated/prisma";
 
 async function requireAuth() {
   const session = await auth();
@@ -12,6 +12,11 @@ async function requireAuth() {
     throw new Error("Unauthorized");
   }
   return session.user;
+}
+
+async function getAllUserIds(): Promise<string[]> {
+  const users = await prisma.user.findMany({ select: { id: true } });
+  return users.map((u) => u.id);
 }
 
 // ── TMDB Search ──
@@ -43,12 +48,21 @@ export async function deleteChannel(id: string) {
 }
 
 export async function updateChannel(id: string, formData: FormData) {
-  await requireAuth();
+  const user = await requireAuth();
+  if (user.role !== "ADMIN") throw new Error("Admin access required");
   const name = (formData.get("name") as string)?.trim();
   if (!name) throw new Error("Channel name is required");
 
   await prisma.channel.update({ where: { id }, data: { name } });
   revalidatePath("/channels");
+}
+
+// ── Watch Mode ──
+
+export async function updateWatchMode(showId: string, watchMode: WatchMode) {
+  await requireAuth();
+  await prisma.tvShow.update({ where: { id: showId }, data: { watchMode } });
+  revalidatePath(`/tv/${showId}`);
 }
 
 // ── TV Shows ──
@@ -178,16 +192,34 @@ export async function rateShow(showId: string, rating: number) {
 export async function toggleWatchedEpisode(episodeId: string) {
   const user = await requireAuth();
 
+  const episode = await prisma.tvEpisode.findUniqueOrThrow({
+    where: { id: episodeId },
+    select: { season: { select: { show: { select: { watchMode: true } } } } },
+  });
+  const isHousehold = episode.season.show.watchMode === "HOUSEHOLD";
+
   const existing = await prisma.watchedEpisode.findUnique({
     where: { episodeId_userId: { episodeId, userId: user.id } },
   });
 
   if (existing) {
-    await prisma.watchedEpisode.delete({ where: { id: existing.id } });
+    if (isHousehold) {
+      await prisma.watchedEpisode.deleteMany({ where: { episodeId } });
+    } else {
+      await prisma.watchedEpisode.delete({ where: { id: existing.id } });
+    }
   } else {
-    await prisma.watchedEpisode.create({
-      data: { episodeId, userId: user.id },
-    });
+    if (isHousehold) {
+      const userIds = await getAllUserIds();
+      await prisma.watchedEpisode.createMany({
+        data: userIds.map((userId) => ({ episodeId, userId })),
+        skipDuplicates: true,
+      });
+    } else {
+      await prisma.watchedEpisode.create({
+        data: { episodeId, userId: user.id },
+      });
+    }
   }
 
   revalidatePath("/tv");
@@ -197,17 +229,33 @@ export async function toggleWatchedEpisode(episodeId: string) {
 export async function markSeasonWatched(seasonId: string) {
   const user = await requireAuth();
 
+  const season = await prisma.tvSeason.findUniqueOrThrow({
+    where: { id: seasonId },
+    select: { show: { select: { watchMode: true } } },
+  });
+  const isHousehold = season.show.watchMode === "HOUSEHOLD";
+
   const episodes = await prisma.tvEpisode.findMany({
     where: { seasonId },
     select: { id: true },
   });
 
-  for (const ep of episodes) {
-    await prisma.watchedEpisode.upsert({
-      where: { episodeId_userId: { episodeId: ep.id, userId: user.id } },
-      create: { episodeId: ep.id, userId: user.id },
-      update: {},
+  if (isHousehold) {
+    const userIds = await getAllUserIds();
+    await prisma.watchedEpisode.createMany({
+      data: episodes.flatMap((ep) =>
+        userIds.map((userId) => ({ episodeId: ep.id, userId })),
+      ),
+      skipDuplicates: true,
     });
+  } else {
+    for (const ep of episodes) {
+      await prisma.watchedEpisode.upsert({
+        where: { episodeId_userId: { episodeId: ep.id, userId: user.id } },
+        create: { episodeId: ep.id, userId: user.id },
+        update: {},
+      });
+    }
   }
 
   revalidatePath("/tv");
