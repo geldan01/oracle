@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { fetchWeather } from "@/lib/weather";
 import MealPlanWidget from "./meal-plan-widget";
 import TvWidget from "./tv-widget";
+import SkillsWidget from "./skills-widget";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -86,6 +87,14 @@ export default async function DashboardPage() {
     .sort((a, b) =>
       a.season.show.name.localeCompare(b.season.show.name),
     );
+
+  const dashboardSkills = await prisma.skill.findMany({
+    where: {
+      favouritedBy: { some: { userId: user.id } },
+    },
+    include: { tags: { orderBy: { name: "asc" } } },
+    orderBy: { title: "asc" },
+  });
 
   let weatherData = null;
   if (primaryCity) {
@@ -270,6 +279,16 @@ export default async function DashboardPage() {
                 meal: { id: e.meal.id, name: e.meal.name },
               }))}
               todayDate={todayDate}
+            />
+
+            {/* ── Skills ── Knowledge style */}
+            <SkillsWidget
+              skills={dashboardSkills.map((s) => ({
+                id: s.id,
+                title: s.title,
+                visibility: s.visibility,
+                tags: s.tags.map((t) => ({ id: t.id, name: t.name })),
+              }))}
             />
 
           </div>

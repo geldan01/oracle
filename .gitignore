@@ -74,5 +74,5 @@ next-env.d.ts
 .zencoder/
 
 # Skills plugin
-skills/
-skills-lock.json
+/skills/
+/skills-lock.json
