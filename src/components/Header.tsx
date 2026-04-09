@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { logout } from "@/lib/auth-actions";
 import { Role } from "@/generated/prisma";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function Header() {
   const session = await auth();
@@ -16,8 +17,10 @@ export default async function Header() {
           {process.env.NEXT_PUBLIC_SITE_TITLE ?? "Oracle"}
         </Link>
 
-        {session?.user && (
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          {session?.user && (
+            <>
             {session.user.role === Role.ADMIN && (
               <Link
                 href="/admin"
@@ -34,8 +37,9 @@ export default async function Header() {
                 Sign out
               </button>
             </form>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
