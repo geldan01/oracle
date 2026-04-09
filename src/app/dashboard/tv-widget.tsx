@@ -17,19 +17,19 @@ export default function TvWidget({ episodes }: { episodes: UpNextEpisode[] }) {
       className="group relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 to-indigo-50 p-6 shadow-sm dark:border-violet-900/40 dark:from-violet-950/40 dark:to-indigo-950/30"
     >
       <div className="absolute bottom-0 left-0 h-20 w-20 -translate-x-6 translate-y-6 rounded-full bg-violet-200/30 dark:bg-violet-800/20" />
-      <div className="flex items-center gap-3">
+      <Link href="/tv" className="flex items-center gap-3 border-b border-violet-200/60 pb-4 transition-colors hover:opacity-80 dark:border-violet-800/40">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15 text-2xl ring-1 ring-violet-500/20 dark:bg-violet-400/10 dark:ring-violet-400/20">
           <span role="img" aria-label="TV">&#128250;</span>
         </div>
         <div>
-          <h2 className="font-semibold text-violet-900 dark:text-violet-100">
+          <h2 className="text-lg font-semibold text-violet-900 dark:text-violet-100">
             TV Shows
           </h2>
           <p className="text-xs text-violet-700/60 dark:text-violet-300/50">
             Up next to watch
           </p>
         </div>
-      </div>
+      </Link>
 
       {episodes.length > 0 ? (
         <ul className="mt-5 space-y-1">
@@ -76,7 +76,7 @@ export default function TvWidget({ episodes }: { episodes: UpNextEpisode[] }) {
 
       <Link
         href="/tv"
-        className="mt-5 block text-xs font-medium text-violet-600/50 transition-colors hover:text-violet-700 dark:text-violet-400/40 dark:hover:text-violet-300"
+        className="mt-4 block text-xs font-medium text-violet-600/50 transition-colors hover:text-violet-700 dark:text-violet-400/40 dark:hover:text-violet-300"
       >
         View all &rarr;
       </Link>

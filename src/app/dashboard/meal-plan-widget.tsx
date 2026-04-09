@@ -108,20 +108,17 @@ export default function MealPlanWidget({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(255,255,255,0.02)_0%,_transparent_50%)]" />
 
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <Link href="/meals" className="flex items-center gap-3 border-b border-stone-600/40 pb-4 transition-colors hover:opacity-80">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/20 text-2xl ring-1 ring-amber-500/30">
           <span role="img" aria-label="Meals">&#127858;</span>
         </div>
         <div>
-          <Link
-            href="/meals"
-            className="font-semibold text-amber-100 transition-colors hover:text-amber-300"
-          >
+          <h2 className="text-lg font-semibold text-amber-100">
             Meal Planner
-          </Link>
+          </h2>
           <p className="text-xs text-stone-400">Today&apos;s menu</p>
         </div>
-      </div>
+      </Link>
 
       {/* Today's meals */}
       <div className="mt-4 min-h-[3rem] space-y-2">
