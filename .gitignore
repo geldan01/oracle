@@ -76,3 +76,7 @@ next-env.d.ts
 # Skills plugin
 /skills/
 /skills-lock.json
+
+# Claude Code local settings and Playwright MCP logs
+.claude/
+.playwright-mcp/

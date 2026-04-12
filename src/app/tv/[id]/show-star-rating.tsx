@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { rateShow } from "@/lib/tv-actions";
+import { rateShow, unrateShow } from "@/lib/tv-actions";
 
 interface ShowStarRatingProps {
   showId: string;
@@ -15,6 +15,12 @@ export default function ShowStarRating({ showId, currentRating }: ShowStarRating
   function handleRate(rating: number) {
     startTransition(async () => {
       await rateShow(showId, rating);
+    });
+  }
+
+  function handleClear() {
+    startTransition(async () => {
+      await unrateShow(showId);
     });
   }
 
@@ -43,7 +49,18 @@ export default function ShowStarRating({ showId, currentRating }: ShowStarRating
         </button>
       ))}
       {currentRating && (
-        <span className="ml-2 text-sm text-stone-400">Your rating</span>
+        <>
+          <span className="ml-2 text-sm text-stone-400">Your rating</span>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={handleClear}
+            className="ml-1 text-xs text-stone-400 underline-offset-2 transition-colors hover:text-red-500 hover:underline disabled:opacity-50"
+            aria-label="Clear rating"
+          >
+            Clear
+          </button>
+        </>
       )}
     </div>
   );

@@ -19,6 +19,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
   const isOwner = !show.ownerId || show.ownerId === user.id;
   const isReadOnly = show.watchMode === "INDIVIDUAL" && !isOwner;
   const userRating = show.ratings.find((r) => r.userId === user.id);
+  const otherRatings = show.ratings.filter((r) => r.userId !== user.id);
   const avgRating =
     show.ratings.length > 0
       ? show.ratings.reduce((sum, r) => sum + r.rating, 0) / show.ratings.length
@@ -106,6 +107,26 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
                 Your Rating
               </p>
               <ShowStarRating showId={show.id} currentRating={userRating?.rating ?? null} />
+              {otherRatings.length > 0 && (
+                <ul className="mt-3 space-y-1">
+                  {otherRatings.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400"
+                    >
+                      <span className="min-w-20 truncate">
+                        {r.user.name ?? r.user.email}
+                      </span>
+                      <span className="text-amber-500">
+                        {"\u2605".repeat(r.rating)}
+                        <span className="text-stone-300 dark:text-stone-600">
+                          {"\u2606".repeat(5 - r.rating)}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {/* Channel */}

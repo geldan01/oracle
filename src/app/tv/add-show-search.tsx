@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { addShowFromTmdb, searchTmdbShows } from "@/lib/tv-actions";
 
 interface SearchResult {
@@ -10,9 +11,11 @@ interface SearchResult {
   poster_path: string | null;
   first_air_date: string;
   vote_average: number;
+  existingId: string | null;
 }
 
 export default function AddShowSearch() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,10 +54,17 @@ export default function AddShowSearch() {
     }, 400);
   }
 
-  async function handleAdd(tmdbId: number) {
-    setAdding(tmdbId);
+  async function handleClick(show: SearchResult) {
+    if (show.existingId) {
+      setQuery("");
+      setResults([]);
+      setOpen(false);
+      router.push(`/tv/${show.existingId}`);
+      return;
+    }
+    setAdding(show.id);
     try {
-      await addShowFromTmdb(tmdbId);
+      await addShowFromTmdb(show.id);
       setQuery("");
       setResults([]);
       setOpen(false);
@@ -84,7 +94,7 @@ export default function AddShowSearch() {
               <button
                 type="button"
                 disabled={adding === show.id}
-                onClick={() => handleAdd(show.id)}
+                onClick={() => handleClick(show)}
                 className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-violet-50 disabled:opacity-50 dark:hover:bg-violet-900/30"
               >
                 {show.poster_path ? (
@@ -98,7 +108,7 @@ export default function AddShowSearch() {
                     TV
                   </div>
                 )}
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-stone-900 dark:text-stone-100">
                     {show.name}
                   </p>
@@ -110,11 +120,15 @@ export default function AddShowSearch() {
                     {show.overview}
                   </p>
                 </div>
-                {adding === show.id && (
-                  <span className="ml-auto shrink-0 text-xs text-violet-500">
-                    Adding...
-                  </span>
-                )}
+                <div className="ml-auto flex shrink-0 items-center">
+                  {show.existingId ? (
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                      Already added &rsaquo;
+                    </span>
+                  ) : adding === show.id ? (
+                    <span className="text-xs text-violet-500">Adding...</span>
+                  ) : null}
+                </div>
               </button>
             </li>
           ))}

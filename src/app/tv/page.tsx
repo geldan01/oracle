@@ -4,18 +4,19 @@ import Image from "next/image";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import AddShowSearch from "./add-show-search";
+import ChannelFilter from "./channel-filter";
 
 export default async function TvPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; channel?: string }>;
 }) {
   const session = await auth();
   if (!session) redirect("/login");
 
   const user = session.user;
   const now = new Date();
-  const { filter = "mine" } = await searchParams;
+  const { filter = "mine", channel: channelFilter } = await searchParams;
 
   const ownershipFilter =
     filter === "all"
@@ -24,10 +25,18 @@ export default async function TvPage({
         ? { watchMode: "HOUSEHOLD" as const }
         : { watchMode: "INDIVIDUAL" as const, ownerId: user.id };
 
+  const channelWhere = channelFilter ? { channelId: channelFilter } : {};
+
+  const channels = await prisma.channel.findMany({ orderBy: { name: "asc" } });
+  const activeChannel = channelFilter
+    ? channels.find((c) => c.id === channelFilter) ?? null
+    : null;
+
   const watchingShows = await prisma.tvShow.findMany({
     where: {
       status: "WATCHING",
       ...ownershipFilter,
+      ...channelWhere,
     },
     include: {
       channel: true,
@@ -66,6 +75,7 @@ export default async function TvPage({
     where: {
       status: { not: "WATCHING" },
       ...ownershipFilter,
+      ...channelWhere,
     },
     include: { channel: true, ratings: true },
     orderBy: { name: "asc" },
@@ -106,27 +116,57 @@ export default async function TvPage({
           </Link>
         </div>
 
-        {/* Filter toggle */}
-        <div className="inline-flex rounded-lg border border-violet-200 dark:border-violet-800">
-          {[
-            { value: "mine", label: "My Shows", href: "/tv" },
-            { value: "household", label: "Household", href: "/tv?filter=household" },
-            { value: "all", label: "All Shows", href: "/tv?filter=all" },
-          ].map((btn, i) => (
-            <Link
-              key={btn.value}
-              href={btn.href}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                i > 0 ? "border-l border-violet-200 dark:border-violet-800" : ""
-              } ${i === 0 ? "rounded-l-lg" : ""} ${i === 2 ? "rounded-r-lg" : ""} ${
-                filter === btn.value
-                  ? "bg-violet-600 text-white dark:bg-violet-500"
-                  : "bg-white text-violet-700 hover:bg-violet-50 dark:bg-stone-900 dark:text-violet-300 dark:hover:bg-violet-900/30"
-              }`}
-            >
-              {btn.label}
-            </Link>
-          ))}
+        {/* Filter toggle + channel filter */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex rounded-lg border border-violet-200 dark:border-violet-800">
+            {(
+              [
+                { value: "mine", label: "My Shows" },
+                { value: "household", label: "Household" },
+                { value: "all", label: "All Shows" },
+              ] as const
+            ).map((btn, i) => {
+              const params = new URLSearchParams();
+              if (btn.value !== "mine") params.set("filter", btn.value);
+              if (channelFilter) params.set("channel", channelFilter);
+              const qs = params.toString();
+              const href = qs ? `/tv?${qs}` : "/tv";
+              return (
+                <Link
+                  key={btn.value}
+                  href={href}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    i > 0 ? "border-l border-violet-200 dark:border-violet-800" : ""
+                  } ${i === 0 ? "rounded-l-lg" : ""} ${i === 2 ? "rounded-r-lg" : ""} ${
+                    filter === btn.value
+                      ? "bg-violet-600 text-white dark:bg-violet-500"
+                      : "bg-white text-violet-700 hover:bg-violet-50 dark:bg-stone-900 dark:text-violet-300 dark:hover:bg-violet-900/30"
+                  }`}
+                >
+                  {btn.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Channel filter */}
+          {channels.length > 0 && (
+            <div className="flex items-center gap-2">
+              <ChannelFilter
+                channels={channels.map((c) => ({ id: c.id, name: c.name }))}
+                currentChannel={channelFilter ?? null}
+                currentFilter={filter}
+              />
+              {activeChannel && (
+                <Link
+                  href={filter === "mine" ? "/tv" : `/tv?filter=${filter}`}
+                  className="text-xs text-stone-500 underline-offset-2 hover:text-red-500 hover:underline dark:text-stone-400"
+                >
+                  Clear
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Search to add */}
@@ -260,53 +300,61 @@ export default async function TvPage({
           )}
         </section>
 
-        {/* Other shows */}
-        {otherShows.length > 0 && (
-          <section>
-            <h2 className="mb-4 text-lg font-semibold text-stone-700 dark:text-stone-300">
-              Other Shows
-            </h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {otherShows.map((show) => {
-                const avg = avgRating(show.ratings);
-                return (
-                  <Link
-                    key={show.id}
-                    href={`/tv/${show.id}`}
-                    className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-stone-800 dark:bg-stone-900/60"
-                  >
-                    {show.posterPath ? (
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w92${show.posterPath}`}
-                        alt=""
-                        width={44}
-                        height={64}
-                        className="h-16 w-11 shrink-0 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-11 shrink-0 items-center justify-center rounded bg-stone-100 text-xs text-stone-400 dark:bg-stone-800">
-                        TV
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-stone-900 dark:text-stone-100">
-                        {show.name}
-                      </p>
-                      <p className="text-xs text-stone-500 dark:text-stone-400">
-                        {show.status.replace(/_/g, " ").toLowerCase()}
+        {/* Plan to Watch / Paused / Completed / Dropped */}
+        {(
+          [
+            { status: "PLAN_TO_WATCH", label: "Plan to Watch" },
+            { status: "PAUSED", label: "Paused" },
+            { status: "COMPLETED", label: "Completed" },
+            { status: "DROPPED", label: "Dropped" },
+          ] as const
+        ).map(({ status, label }) => {
+          const shows = otherShows.filter((s) => s.status === status);
+          if (shows.length === 0) return null;
+          return (
+            <section key={status}>
+              <h2 className="mb-4 text-lg font-semibold text-stone-700 dark:text-stone-300">
+                {label}
+              </h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {shows.map((show) => {
+                  const avg = avgRating(show.ratings);
+                  return (
+                    <Link
+                      key={show.id}
+                      href={`/tv/${show.id}`}
+                      className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-stone-800 dark:bg-stone-900/60"
+                    >
+                      {show.posterPath ? (
+                        <Image
+                          src={`https://image.tmdb.org/t/p/w92${show.posterPath}`}
+                          alt=""
+                          width={44}
+                          height={64}
+                          className="h-16 w-11 shrink-0 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-11 shrink-0 items-center justify-center rounded bg-stone-100 text-xs text-stone-400 dark:bg-stone-800">
+                          TV
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-stone-900 dark:text-stone-100">
+                          {show.name}
+                        </p>
                         {avg != null && (
-                          <span className="ml-2 text-amber-500">
+                          <p className="text-xs text-amber-500">
                             {"★".repeat(Math.round(avg))}
-                          </span>
+                          </p>
                         )}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );

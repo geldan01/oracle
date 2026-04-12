@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { promoteToAdmin, demoteToMember } from "@/lib/auth-actions";
 import { removeWeatherCity, setPrimaryCity } from "@/lib/weather-actions";
+import { getSystemSettings, setRegistrationEnabled } from "@/lib/settings-actions";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/generated/prisma";
 import WeatherCitySearch from "@/components/WeatherCitySearch";
@@ -73,6 +74,11 @@ export default async function AdminPage() {
   }
 
   const currentUser = session.user;
+  const settings = await getSystemSettings();
+  const toggleRegistration = setRegistrationEnabled.bind(
+    null,
+    !settings.registrationEnabled,
+  );
   const weatherCities = await prisma.weatherCity.findMany({
     orderBy: { position: "asc" },
   });
@@ -106,6 +112,42 @@ export default async function AdminPage() {
             >
               Manage Channels
             </Link>
+          </div>
+        </div>
+
+        {/* ── System Settings ── */}
+        <div className="rounded-lg bg-white shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+          <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              System Settings
+            </h2>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Global controls for the app.
+            </p>
+          </div>
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                Public registration
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                {settings.registrationEnabled
+                  ? "New visitors can create their own account from /register."
+                  : "The /register page is blocked. Only existing members can sign in."}
+              </p>
+            </div>
+            <form action={toggleRegistration}>
+              <button
+                type="submit"
+                className={`rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 ${
+                  settings.registrationEnabled
+                    ? "bg-red-600 hover:bg-red-500 focus:ring-red-500"
+                    : "bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-500"
+                }`}
+              >
+                {settings.registrationEnabled ? "Disable" : "Enable"}
+              </button>
+            </form>
           </div>
         </div>
 

@@ -21,9 +21,22 @@ async function getAllUserIds(): Promise<string[]> {
 
 // ── TMDB Search ──
 
-export async function searchTmdbShows(query: string): Promise<TmdbSearchResult[]> {
+export type TmdbSearchResultWithStatus = TmdbSearchResult & {
+  existingId: string | null;
+};
+
+export async function searchTmdbShows(query: string): Promise<TmdbSearchResultWithStatus[]> {
   await requireAuth();
-  return tmdbSearch(query);
+  const results = await tmdbSearch(query);
+  if (results.length === 0) return [];
+
+  const existing = await prisma.tvShow.findMany({
+    where: { tmdbId: { in: results.map((r) => r.id) } },
+    select: { id: true, tmdbId: true },
+  });
+  const byTmdbId = new Map(existing.map((s) => [s.tmdbId, s.id]));
+
+  return results.map((r) => ({ ...r, existingId: byTmdbId.get(r.id) ?? null }));
 }
 
 // ── Channels ──
@@ -199,6 +212,16 @@ export async function rateShow(showId: string, rating: number) {
   revalidatePath("/tv");
 }
 
+export async function unrateShow(showId: string) {
+  const user = await requireAuth();
+
+  await prisma.tvShowRating.deleteMany({
+    where: { showId, userId: user.id },
+  });
+  revalidatePath(`/tv/${showId}`);
+  revalidatePath("/tv");
+}
+
 // ── Episodes ──
 
 export async function toggleWatchedEpisode(episodeId: string) {
@@ -344,7 +367,9 @@ export async function getShowById(showId: string) {
     include: {
       channel: true,
       owner: { select: { id: true, name: true } },
-      ratings: true,
+      ratings: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
       seasons: {
         orderBy: { seasonNumber: "asc" },
         include: {

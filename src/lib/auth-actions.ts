@@ -17,12 +17,20 @@ export async function register(
     return { error: "Email and password are required" };
   }
 
+  // Allow first-ever user to register (bootstrap admin), otherwise check setting
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    const settings = await prisma.systemSettings.findUnique({ where: { id: 1 } });
+    if (settings && !settings.registrationEnabled) {
+      return { error: "Registration is currently disabled" };
+    }
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return { error: "An account with this email already exists" };
   }
 
-  const userCount = await prisma.user.count();
   const role = userCount === 0 ? "ADMIN" : "MEMBER";
 
   const hashedPassword = await hash(password, 12);

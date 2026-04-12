@@ -284,6 +284,12 @@ model SkillTag {
   skills Skill[]
 }
 
+model SystemSettings {
+  id                  Int      @id @default(1)
+  registrationEnabled Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+}
+
 model WeatherCity {
   id        String   @id @default(cuid())
   name      String

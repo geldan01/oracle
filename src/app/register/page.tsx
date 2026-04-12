@@ -1,143 +1,16 @@
-"use client";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import RegisterForm from "./register-form";
 
-import { useActionState } from "react";
-import Link from "next/link";
-import { register } from "@/lib/auth-actions";
-
-function validateAndRegister(
-  _prevState: { error: string } | undefined,
-  formData: FormData
-) {
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
-
-  if (password !== confirmPassword) {
-    return { error: "Passwords do not match" };
+export default async function RegisterPage() {
+  // Always allow the first user to bootstrap; afterwards honor the setting
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    const settings = await prisma.systemSettings.findUnique({ where: { id: 1 } });
+    if (settings && !settings.registrationEnabled) {
+      redirect("/login");
+    }
   }
 
-  return register(_prevState, formData);
-}
-
-export default function RegisterPage() {
-  const [state, formAction, pending] = useActionState(
-    validateAndRegister,
-    undefined
-  );
-
-  const error = state?.error;
-
-  return (
-    <div className="flex min-h-full flex-1 items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Create an account
-          </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Get started with Oracle
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <form action={formAction} className="space-y-5">
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-950/50">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                autoComplete="name"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="Your name"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="new-password"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="Create a password"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                autoComplete="new-password"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="Confirm your password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={pending}
-              className="w-full rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-offset-zinc-900"
-            >
-              {pending ? "Creating account..." : "Create account"}
-            </button>
-          </form>
-        </div>
-
-        <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
-          >
-            Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
+  return <RegisterForm />;
 }
