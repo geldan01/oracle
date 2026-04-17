@@ -1,7 +1,12 @@
 "use client";
 
 import { useTransition } from "react";
-import { updateShowStatus, removeShow, refreshShowData, updateWatchMode } from "@/lib/tv-actions";
+import {
+  updateShowStatus,
+  removeShow,
+  refreshShowData,
+  updateWatchMode,
+} from "@/lib/tv-actions";
 import { useRouter } from "next/navigation";
 import { TvShowStatus, WatchMode } from "@/generated/prisma";
 
@@ -19,7 +24,11 @@ const statuses: { value: TvShowStatus; label: string }[] = [
   { value: "PLAN_TO_WATCH", label: "Plan to Watch" },
 ];
 
-export default function ShowActions({ showId, currentStatus, watchMode }: ShowActionsProps) {
+export default function ShowActions({
+  showId,
+  currentStatus,
+  watchMode,
+}: ShowActionsProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -50,12 +59,12 @@ export default function ShowActions({ showId, currentStatus, watchMode }: ShowAc
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <select
         value={currentStatus}
         onChange={handleStatusChange}
         disabled={isPending}
-        className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-stone-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none disabled:opacity-50 dark:border-violet-800 dark:bg-stone-900 dark:text-stone-100"
+        className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
       >
         {statuses.map((s) => (
           <option key={s.value} value={s.value}>
@@ -65,15 +74,15 @@ export default function ShowActions({ showId, currentStatus, watchMode }: ShowAc
       </select>
 
       {/* Watch mode toggle */}
-      <div className="inline-flex rounded-lg border border-violet-200 dark:border-violet-800">
+      <div className="inline-flex rounded-full bg-stone-100 p-0.5 dark:bg-stone-800">
         <button
           type="button"
           onClick={() => handleWatchModeChange("INDIVIDUAL")}
           disabled={isPending}
-          className={`rounded-l-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+          className={`rounded-full px-3 py-1 text-sm font-medium transition-colors active:scale-[0.98] disabled:opacity-50 ${
             watchMode === "INDIVIDUAL"
-              ? "bg-violet-600 text-white dark:bg-violet-500"
-              : "bg-white text-violet-700 hover:bg-violet-50 dark:bg-stone-900 dark:text-violet-300 dark:hover:bg-violet-900/30"
+              ? "bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-stone-100"
+              : "text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
           }`}
         >
           Just Me
@@ -82,10 +91,10 @@ export default function ShowActions({ showId, currentStatus, watchMode }: ShowAc
           type="button"
           onClick={() => handleWatchModeChange("HOUSEHOLD")}
           disabled={isPending}
-          className={`rounded-r-lg border-l border-violet-200 px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 dark:border-violet-800 ${
+          className={`rounded-full px-3 py-1 text-sm font-medium transition-colors active:scale-[0.98] disabled:opacity-50 ${
             watchMode === "HOUSEHOLD"
-              ? "bg-violet-600 text-white dark:bg-violet-500"
-              : "bg-white text-violet-700 hover:bg-violet-50 dark:bg-stone-900 dark:text-violet-300 dark:hover:bg-violet-900/30"
+              ? "bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-stone-100"
+              : "text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
           }`}
         >
           Household
@@ -96,15 +105,15 @@ export default function ShowActions({ showId, currentStatus, watchMode }: ShowAc
         type="button"
         onClick={handleRefresh}
         disabled={isPending}
-        className="rounded-lg border border-violet-200 px-3 py-2 text-sm text-violet-700 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-900/30"
+        className="rounded-full px-3 py-1.5 text-sm text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 active:scale-[0.98] disabled:opacity-50 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
       >
-        {isPending ? "Syncing..." : "Refresh from TMDB"}
+        {isPending ? "Syncing…" : "Refresh from TMDB"}
       </button>
       <button
         type="button"
         onClick={handleRemove}
         disabled={isPending}
-        className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+        className="rounded-full px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 active:scale-[0.98] disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-900/20"
       >
         Remove
       </button>

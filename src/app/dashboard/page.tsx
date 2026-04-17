@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { ListChecks, CloudSun, Hammer } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchWeather } from "@/lib/weather";
+import { getSystemSettings } from "@/lib/settings-actions";
 import MealPlanWidget from "./meal-plan-widget";
 import TvWidget from "./tv-widget";
 import SkillsWidget from "./skills-widget";
@@ -55,10 +58,7 @@ export default async function DashboardPage() {
       season: {
         show: {
           status: "WATCHING",
-          OR: [
-            { watchMode: "HOUSEHOLD" },
-            { ownerId: user.id },
-          ],
+          OR: [{ watchMode: "HOUSEHOLD" }, { ownerId: user.id }],
         },
       },
       watchedBy: { none: { userId: user.id } },
@@ -76,7 +76,6 @@ export default async function DashboardPage() {
     },
   });
 
-  // Deduplicate by show — keep only the first unwatched episode per show
   const seenShows = new Set<string>();
   const dedupedEpisodes = upNextEpisodes
     .filter((ep) => {
@@ -84,17 +83,15 @@ export default async function DashboardPage() {
       seenShows.add(ep.season.show.id);
       return true;
     })
-    .sort((a, b) =>
-      a.season.show.name.localeCompare(b.season.show.name),
-    );
+    .sort((a, b) => a.season.show.name.localeCompare(b.season.show.name));
 
   const dashboardSkills = await prisma.skill.findMany({
-    where: {
-      favouritedBy: { some: { userId: user.id } },
-    },
+    where: { favouritedBy: { some: { userId: user.id } } },
     include: { tags: { orderBy: { name: "asc" } } },
     orderBy: { title: "asc" },
   });
+
+  const settings = await getSystemSettings();
 
   let weatherData = null;
   if (primaryCity) {
@@ -105,196 +102,179 @@ export default async function DashboardPage() {
         primaryCity.timezone,
       );
     } catch {
-      // Weather API unavailable — show fallback
+      // Weather API unavailable
     }
   }
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-5xl space-y-8">
-        {/* Welcome */}
-        <div className="border-b border-amber-200/60 pb-6 dark:border-amber-900/30">
-          <p className="text-sm font-medium tracking-wide text-amber-700/70 uppercase dark:text-amber-400/60">
-            Welcome back
-          </p>
-          <p className="mt-2 text-base text-stone-600 dark:text-stone-400">
-            Good to see you, {user.name ?? user.email}
-          </p>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+      {/* Hero image */}
+      {settings.dashboardHeroImage && (
+        <div className="relative mb-10 aspect-16/5 w-full overflow-hidden rounded-2xl">
+          <Image
+            src={settings.dashboardHeroImage}
+            alt=""
+            fill
+            priority
+            className="object-cover"
+            style={{
+              objectPosition: `${settings.dashboardHeroImageX}% ${settings.dashboardHeroImageY}%`,
+            }}
+            sizes="(max-width: 1280px) 100vw, 1280px"
+          />
+          {/* Gentle fade to background at the bottom so the welcome text breathes */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-background to-transparent" />
+        </div>
+      )}
+
+      {/* Welcome */}
+      <div className="mb-12">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">
+          {today.toLocaleDateString("en-US", { weekday: "long" })}
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+          Hello, {user.name ?? user.email}
+        </h1>
+      </div>
+
+      {/* Bento layout — TV up next is the hero (full width on mobile, 2/3 on desktop) */}
+      <div className="grid grid-cols-1 gap-x-12 gap-y-12 lg:grid-cols-3">
+        {/* Up Next — featured */}
+        <div className="lg:col-span-2">
+          <TvWidget episodes={dedupedEpisodes} />
         </div>
 
-        {/* Widget Grid — Main body (2/3) + Right sidebar (1/3) */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Weather — top right */}
+        <section>
+          <Link
+            href="/weather"
+            className="group flex items-center gap-3 transition-opacity hover:opacity-70"
+          >
+            <CloudSun
+              size={20}
+              weight="regular"
+              className="text-sky-600 dark:text-sky-400"
+            />
+            <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+              {primaryCity ? primaryCity.name : "Weather"}
+            </h2>
+          </Link>
 
-          {/* ── Main Column (2/3 width) ── */}
-          <div className="space-y-6 lg:col-span-2">
-
-            {/* ── Shared Todos ── Warm notepad style */}
-            <div
-              className="group relative overflow-hidden rounded-2xl border border-amber-200/80 bg-linear-to-br from-amber-50 to-orange-50 p-6 shadow-sm dark:border-amber-900/40 dark:from-amber-950/40 dark:to-orange-950/30"
-            >
-              <div className="absolute top-0 right-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full bg-amber-200/30 dark:bg-amber-800/20" />
-              <Link href="/dashboard/todos" className="flex items-center gap-3 border-b border-amber-200/60 pb-4 transition-colors hover:opacity-80 dark:border-amber-800/40">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/15 text-2xl ring-1 ring-amber-500/20 dark:bg-amber-400/10 dark:ring-amber-400/20">
-                  <span role="img" aria-label="Todos">&#9745;</span>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
-                    Shared Todos
-                  </h2>
-                  <p className="text-xs text-amber-700/60 dark:text-amber-300/50">
-                    {todoLists.length} {todoLists.length === 1 ? "list" : "lists"} &middot;{" "}
-                    {completedTodos}/{totalTodos} done
-                  </p>
-                </div>
-              </Link>
-              {todoLists.length > 0 ? (
-                <ul className="mt-5 space-y-2.5">
-                  {todoLists.slice(0, 3).map((list) => {
-                    const done = list.items.filter((i) => i.done).length;
-                    const total = list.items.length;
-                    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-                    return (
-                      <li key={list.id} className="text-sm">
-                        <div className="flex items-center justify-between text-amber-800 dark:text-amber-200">
-                          <span className="truncate">{list.name}</span>
-                          <span className="ml-2 shrink-0 text-xs text-amber-600/50 dark:text-amber-400/40">
-                            {done}/{total}
-                          </span>
-                        </div>
-                        <div className="mt-1.5 h-1.5 w-full rounded-full bg-amber-200/60 dark:bg-amber-800/40">
-                          <div
-                            className="h-1.5 rounded-full bg-amber-500 transition-all dark:bg-amber-400"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="mt-5 text-sm text-amber-600/50 dark:text-amber-400/40">
-                  No lists yet. Tap to create one.
+          {primaryCity && weatherData ? (
+            <div className="mt-4">
+              <div className="flex items-baseline gap-3">
+                <span className="text-5xl font-light tracking-tight text-stone-900 tabular-nums dark:text-stone-100">
+                  {weatherData.current.temperature}°
+                </span>
+                <span className="text-lg text-stone-400 dark:text-stone-500">
+                  {weatherData.current.icon}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                {weatherData.current.description}
+              </p>
+              {weatherData.daily[0] && (
+                <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                  H {weatherData.daily[0].temperatureMax}° · L{" "}
+                  {weatherData.daily[0].temperatureMin}° · feels{" "}
+                  {weatherData.current.apparentTemperature}°
                 </p>
               )}
-              <Link
-                href="/dashboard/todos"
-                className="mt-4 block text-xs font-medium text-amber-600/50 transition-colors hover:text-amber-700 dark:text-amber-400/40 dark:hover:text-amber-300"
-              >
-                View all &rarr;
-              </Link>
             </div>
+          ) : (
+            <p className="mt-4 text-sm text-stone-400 dark:text-stone-500">
+              {primaryCity ? "Unable to load weather" : "No cities configured"}
+            </p>
+          )}
+        </section>
 
-            {/* ── TV Shows ── Up Next widget */}
-            <TvWidget episodes={dedupedEpisodes} />
+        {/* Todos — left side, second row */}
+        <section className="lg:col-span-2">
+          <Link
+            href="/dashboard/todos"
+            className="group flex items-center gap-3 transition-opacity hover:opacity-70"
+          >
+            <ListChecks
+              size={20}
+              weight="regular"
+              className="text-amber-600 dark:text-amber-400"
+            />
+            <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+              Shared Todos
+            </h2>
+            <span className="text-xs text-stone-400 dark:text-stone-500">
+              {completedTodos}/{totalTodos}
+            </span>
+          </Link>
 
-            {/* ── Household Projects ── Earthy workshop style */}
-            <div className="relative overflow-hidden rounded-2xl border border-emerald-200/80 bg-linear-to-br from-emerald-50 to-teal-50 p-6 shadow-sm dark:border-emerald-900/40 dark:from-emerald-950/40 dark:to-teal-950/30">
-              <div className="absolute bottom-0 right-0 h-16 w-16 translate-x-4 translate-y-4 rounded-full bg-emerald-200/30 dark:bg-emerald-800/20" />
-              <div className="flex items-center gap-3 border-b border-emerald-200/60 pb-4 dark:border-emerald-800/40">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-2xl ring-1 ring-emerald-500/20 dark:bg-emerald-400/10 dark:ring-emerald-400/20">
-                  <span role="img" aria-label="Projects">&#128736;</span>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                    Projects
-                  </h2>
-                  <p className="text-xs text-emerald-700/60 dark:text-emerald-300/50">
-                    Home improvement &amp; more
-                  </p>
-                </div>
-              </div>
-              <div className="mt-5 flex flex-col items-center justify-center rounded-xl border border-dashed border-emerald-300/60 py-8 dark:border-emerald-700/40">
-                <p className="text-sm font-medium text-emerald-400 dark:text-emerald-500">Coming soon</p>
-                <p className="mt-1 text-xs text-emerald-300 dark:text-emerald-600">
-                  Track status &amp; notes
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ── Right Sidebar (1/3 width) ── */}
-          <div className="space-y-6">
-
-            {/* ── Weather ── Fresh sky/breeze style */}
-            <div
-              className="group relative overflow-hidden rounded-2xl border border-sky-200/80 bg-linear-to-br from-sky-50 to-cyan-50 p-6 shadow-sm dark:border-sky-900/40 dark:from-sky-950/40 dark:to-cyan-950/30"
-            >
-              <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-sky-200/30 dark:bg-sky-800/20" />
-              <div className="absolute bottom-0 right-8 h-10 w-10 translate-y-3 rounded-full bg-cyan-200/20 dark:bg-cyan-800/10" />
-              <Link href="/weather" className="flex items-center gap-3 border-b border-sky-200/60 pb-4 transition-colors hover:opacity-80 dark:border-sky-800/40">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/15 text-2xl ring-1 ring-sky-500/20 dark:bg-sky-400/10 dark:ring-sky-400/20">
-                  <span role="img" aria-label="Weather">&#9925;</span>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
-                    Weather
-                  </h2>
-                  <p className="text-xs text-sky-700/60 dark:text-sky-300/50">
-                    {primaryCity ? primaryCity.name : "Local forecast"}
-                  </p>
-                </div>
-              </Link>
-
-              {primaryCity && weatherData ? (
-                <div className="mt-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-light text-sky-900 dark:text-sky-100">
-                        {weatherData.current.temperature}°
-                      </span>
-                      <span className="text-3xl">
-                        {weatherData.current.icon}
+          {todoLists.length > 0 ? (
+            <ul className="mt-4 space-y-3">
+              {todoLists.slice(0, 4).map((list) => {
+                const done = list.items.filter((i) => i.done).length;
+                const total = list.items.length;
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                return (
+                  <li key={list.id}>
+                    <div className="flex items-center justify-between text-sm text-stone-900 dark:text-stone-100">
+                      <span className="truncate">{list.name}</span>
+                      <span className="ml-2 shrink-0 text-xs tabular-nums text-stone-400 dark:text-stone-500">
+                        {done}/{total}
                       </span>
                     </div>
-                    {weatherData.daily[0] && (
-                      <div className="text-right text-xs text-sky-600 dark:text-sky-400">
-                        <p>H: {weatherData.daily[0].temperatureMax}°</p>
-                        <p>L: {weatherData.daily[0].temperatureMin}°</p>
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-1 text-sm text-sky-700/80 dark:text-sky-300/60">
-                    {weatherData.current.description}
-                  </p>
-                  <p className="mt-0.5 text-xs text-sky-600/60 dark:text-sky-400/50">
-                    Feels like {weatherData.current.apparentTemperature}° &middot; Wind {weatherData.current.windSpeed} km/h
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-5 flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-300/60 py-8 dark:border-sky-700/40">
-                  <p className="text-sm font-medium text-sky-400 dark:text-sky-500">
-                    {primaryCity ? "Unable to load weather" : "No cities configured"}
-                  </p>
-                  <p className="mt-1 text-xs text-sky-300 dark:text-sky-600">
-                    {primaryCity ? "Tap to retry" : "Add cities in Admin"}
-                  </p>
-                </div>
-              )}
-            </div>
+                    <div className="mt-1.5 h-px w-full overflow-hidden bg-stone-100 dark:bg-stone-800">
+                      <div
+                        className="h-px bg-amber-500 transition-all dark:bg-amber-400"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-stone-400 dark:text-stone-500">
+              No lists yet
+            </p>
+          )}
+        </section>
 
-            {/* ── Meal Planner ── Chalkboard style */}
-            <MealPlanWidget
-              todayEntries={todayMealEntries.map((e) => ({
-                id: e.id,
-                meal: { id: e.meal.id, name: e.meal.name },
-              }))}
-              todayDate={todayDate}
-            />
+        {/* Meal planner — right side, second row */}
+        <MealPlanWidget
+          todayEntries={todayMealEntries.map((e) => ({
+            id: e.id,
+            meal: { id: e.meal.id, name: e.meal.name },
+          }))}
+          todayDate={todayDate}
+        />
 
-            {/* ── Skills ── Knowledge style */}
-            <SkillsWidget
-              skills={dashboardSkills.map((s) => ({
-                id: s.id,
-                title: s.title,
-                visibility: s.visibility,
-                tags: s.tags.map((t) => ({ id: t.id, name: t.name })),
-              }))}
-            />
-
-          </div>
-
+        {/* Skills — full width below */}
+        <div className="lg:col-span-2">
+          <SkillsWidget
+            skills={dashboardSkills.map((s) => ({
+              id: s.id,
+              title: s.title,
+              visibility: s.visibility,
+              tags: s.tags.map((t) => ({ id: t.id, name: t.name })),
+            }))}
+          />
         </div>
+
+        {/* Projects placeholder — slim */}
+        <section>
+          <div className="flex items-center gap-3 opacity-50">
+            <Hammer
+              size={20}
+              weight="regular"
+              className="text-stone-400 dark:text-stone-500"
+            />
+            <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+              Projects
+            </h2>
+          </div>
+          <p className="mt-4 text-sm text-stone-400 dark:text-stone-500">
+            Coming soon
+          </p>
+        </section>
       </div>
     </div>
   );

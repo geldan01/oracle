@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { CaretDown } from "@phosphor-icons/react";
 import { markSeasonWatched } from "@/lib/tv-actions";
 import EpisodeRow from "./episode-row";
 
@@ -24,7 +25,12 @@ interface SeasonSectionProps {
   readOnly?: boolean;
 }
 
-export default function SeasonSection({ showId, season, defaultOpen = false, readOnly = false }: SeasonSectionProps) {
+export default function SeasonSection({
+  showId,
+  season,
+  defaultOpen = false,
+  readOnly = false,
+}: SeasonSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [isPending, startTransition] = useTransition();
 
@@ -39,41 +45,37 @@ export default function SeasonSection({ showId, season, defaultOpen = false, rea
   }
 
   return (
-    <div className="rounded-xl border border-violet-200/80 bg-white dark:border-violet-900/40 dark:bg-stone-900/60">
+    <div className="border-b border-stone-200 last:border-b-0 dark:border-stone-800">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        className="flex w-full items-center justify-between py-3 text-left transition-colors hover:bg-stone-50 dark:hover:bg-stone-900"
       >
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+          <span className="text-sm font-medium text-stone-900 dark:text-stone-100">
             {season.name ?? `Season ${season.seasonNumber}`}
           </span>
-          <span className="text-xs text-stone-400 dark:text-stone-500">
-            {watchedCount}/{totalCount} watched
+          <span className="text-xs text-stone-400 tabular-nums dark:text-stone-500">
+            {watchedCount}/{totalCount}
           </span>
         </div>
-        <svg
-          className={`h-4 w-4 text-stone-400 transition-transform ${open ? "rotate-180" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <CaretDown
+          size={14}
+          weight="regular"
+          className={`text-stone-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && (
-        <div className="border-t border-violet-100 px-5 pb-4 dark:border-violet-900/30">
+        <div className="pb-3">
           {!readOnly && !allWatched && (
-            <div className="flex justify-end pt-2 pb-1">
+            <div className="flex justify-end pb-2">
               <button
                 type="button"
                 onClick={handleMarkAll}
                 disabled={isPending}
-                className="text-xs text-violet-600 hover:text-violet-800 disabled:opacity-50 dark:text-violet-400 dark:hover:text-violet-200"
+                className="text-xs text-emerald-600 transition-colors hover:text-emerald-700 active:scale-[0.98] disabled:opacity-50 dark:text-emerald-400 dark:hover:text-emerald-300"
               >
-                {isPending ? "Marking..." : "Mark all watched"}
+                {isPending ? "Marking…" : "Mark all watched"}
               </button>
             </div>
           )}

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "SystemSettings" ADD COLUMN     "dashboardHeroImageX" DOUBLE PRECISION NOT NULL DEFAULT 50,
+ADD COLUMN     "dashboardHeroImageY" DOUBLE PRECISION NOT NULL DEFAULT 50;

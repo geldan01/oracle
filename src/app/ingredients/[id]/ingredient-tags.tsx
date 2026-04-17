@@ -39,13 +39,13 @@ export default function IngredientTags({
   const [saved, setSaved] = useState(false);
 
   const allOptions = Array.from(
-    new Set([...GROCERY_SECTIONS, ...allExistingTags, ...selectedTags])
+    new Set([...GROCERY_SECTIONS, ...allExistingTags, ...selectedTags]),
   ).sort();
 
   function toggleTag(tag: string) {
     setSaved(false);
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   }
 
@@ -68,20 +68,23 @@ export default function IngredientTags({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {allOptions.map((tag) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => toggleTag(tag)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              selectedTags.includes(tag)
-                ? "bg-amber-600 text-white"
-                : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-700 dark:text-stone-300 dark:hover:bg-stone-600"
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
+        {allOptions.map((tag) => {
+          const active = selectedTags.includes(tag);
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => toggleTag(tag)}
+              className={`rounded-full px-2.5 py-0.5 text-xs transition-all active:scale-[0.96] ${
+                active
+                  ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-stone-900"
+                  : "text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+              }`}
+            >
+              {active ? "" : "+"}#{tag}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex gap-2">
@@ -95,13 +98,13 @@ export default function IngredientTags({
               addCustomTag();
             }
           }}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-800 outline-none focus:border-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
-          placeholder="Custom section..."
+          className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+          placeholder="Custom section…"
         />
         <button
           type="button"
           onClick={addCustomTag}
-          className="rounded-lg bg-stone-200 px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-300 dark:bg-stone-700 dark:text-stone-300 dark:hover:bg-stone-600"
+          className="rounded-lg px-3 py-1.5 text-sm text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 active:scale-[0.98] dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
         >
           Add
         </button>
@@ -111,9 +114,9 @@ export default function IngredientTags({
         type="button"
         onClick={handleSave}
         disabled={isPending}
-        className="rounded-lg bg-amber-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+        className="rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white transition-all hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50 dark:bg-emerald-500 dark:text-stone-900 dark:hover:bg-emerald-400"
       >
-        {isPending ? "Saving..." : saved ? "Saved!" : "Save Tags"}
+        {isPending ? "Saving…" : saved ? "Saved" : "Save sections"}
       </button>
     </div>
   );

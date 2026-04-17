@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Drop, CloudSun } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchWeather, type CityWeatherData } from "@/lib/weather";
@@ -24,28 +25,20 @@ export default async function WeatherPage() {
 
   if (cities.length === 0) {
     return (
-      <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-        <div className="w-full max-w-5xl space-y-6">
-          <div className="border-b border-sky-200/60 pb-6 dark:border-sky-900/30">
-            <Link
-              href="/dashboard"
-              className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400"
-            >
-              &larr; Dashboard
-            </Link>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-sky-900 dark:text-sky-100">
-              Weather
-            </h1>
-          </div>
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-sky-300/60 py-16 dark:border-sky-700/40">
-            <p className="text-lg font-medium text-sky-400 dark:text-sky-500">
-              No cities configured
-            </p>
-            <p className="mt-2 text-sm text-sky-300 dark:text-sky-600">
-              An admin can add cities from the Admin panel.
-            </p>
-          </div>
-        </div>
+      <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+        <Link
+          href="/dashboard"
+          className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+        >
+          ← Dashboard
+        </Link>
+        <h1 className="mt-4 flex items-center gap-3 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+          <CloudSun size={28} weight="duotone" className="text-sky-500 dark:text-sky-400" />
+          Weather
+        </h1>
+        <p className="mt-12 text-sm text-stone-400 dark:text-stone-500">
+          No cities configured. An admin can add cities from the Admin panel.
+        </p>
       </div>
     );
   }
@@ -73,144 +66,126 @@ export default async function WeatherPage() {
   );
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-5xl space-y-6">
-        <div className="border-b border-sky-200/60 pb-6 dark:border-sky-900/30">
-          <Link
-            href="/dashboard"
-            className="text-sm text-sky-600 hover:text-sky-500 dark:text-sky-400"
-          >
-            &larr; Dashboard
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-sky-900 dark:text-sky-100">
-            Weather
-          </h1>
-        </div>
+    <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <Link
+        href="/dashboard"
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← Dashboard
+      </Link>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+        Weather
+      </h1>
 
-        <div className="space-y-8">
-          {citiesWithWeather.map((city) => (
-            <div
-              key={city.id}
-              className="overflow-hidden rounded-2xl border border-sky-200/80 bg-linear-to-br from-sky-50 to-cyan-50 shadow-sm dark:border-sky-900/40 dark:from-sky-950/40 dark:to-cyan-950/30"
-            >
-              {/* City Header */}
-              <div className="border-b border-sky-200/60 px-6 py-4 dark:border-sky-800/40">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
-                    {city.name}
-                  </h2>
-                  <span className="text-sm text-sky-600/70 dark:text-sky-400/60">
-                    {city.country}
-                  </span>
-                  {city.isPrimary && (
-                    <span className="rounded-full bg-sky-200/80 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-800/50 dark:text-sky-300">
-                      Primary
-                    </span>
-                  )}
-                </div>
-              </div>
+      <div className="mt-12 space-y-16">
+        {citiesWithWeather.map((city) => (
+          <section key={city.id}>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                {city.name}, {city.country}
+              </h2>
+              {city.isPrimary && (
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  Primary
+                </span>
+              )}
+            </div>
 
-              {city.weather ? (
-                <div className="p-6 space-y-6">
-                  {/* Current Conditions */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-5xl font-light text-sky-900 dark:text-sky-100">
-                          {city.weather.current.temperature}°C
-                        </span>
-                        <span className="text-4xl">
-                          {city.weather.current.icon}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-base text-sky-800 dark:text-sky-200">
-                        {city.weather.current.description}
-                      </p>
-                    </div>
-                    <div className="text-right text-sm text-sky-700/80 dark:text-sky-300/60 space-y-1">
-                      <p>
-                        Feels like{" "}
-                        {city.weather.current.apparentTemperature}°C
-                      </p>
-                      <p>Humidity {city.weather.current.humidity}%</p>
-                      <p>Wind {city.weather.current.windSpeed} km/h</p>
-                    </div>
-                  </div>
-
-                  {/* Rest of Today — Hourly */}
-                  {city.weather.hourly.length > 0 && (
-                    <div>
-                      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-sky-700/60 dark:text-sky-400/50">
-                        Rest of Today
-                      </h3>
-                      <div className="flex gap-1 overflow-x-auto pb-2">
-                        {city.weather.hourly.map((hour, i) => (
-                          <div
-                            key={i}
-                            className="flex flex-shrink-0 flex-col items-center rounded-xl bg-sky-100/60 px-3 py-2 dark:bg-sky-900/30"
-                          >
-                            <span className="text-xs text-sky-600 dark:text-sky-400">
-                              {hour.time}
-                            </span>
-                            <span className="my-1 text-lg">{hour.icon}</span>
-                            <span className="text-sm font-medium text-sky-900 dark:text-sky-100">
-                              {hour.temperature}°
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 7-Day Forecast */}
+            {city.weather ? (
+              <div className="mt-4 space-y-8">
+                {/* Current */}
+                <div className="flex items-start justify-between border-b border-stone-200 pb-6 dark:border-stone-800">
                   <div>
-                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-sky-700/60 dark:text-sky-400/50">
-                      7-Day Forecast
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-6xl font-light tracking-tight text-stone-900 tabular-nums dark:text-stone-100">
+                        {city.weather.current.temperature}°
+                      </span>
+                      <span className="text-3xl text-stone-400 dark:text-stone-500">
+                        {city.weather.current.icon}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base text-stone-600 dark:text-stone-300">
+                      {city.weather.current.description}
+                    </p>
+                  </div>
+                  <div className="space-y-1 text-right text-xs text-stone-500 tabular-nums dark:text-stone-400">
+                    <p>Feels {city.weather.current.apparentTemperature}°</p>
+                    <p>Humidity {city.weather.current.humidity}%</p>
+                    <p>Wind {city.weather.current.windSpeed} km/h</p>
+                  </div>
+                </div>
+
+                {/* Hourly */}
+                {city.weather.hourly.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                      Today
                     </h3>
-                    <div className="space-y-1">
-                      {city.weather.daily.map((day, i) => (
+                    <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+                      {city.weather.hourly.map((hour, i) => (
                         <div
                           key={i}
-                          className="flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-sky-100/50 dark:hover:bg-sky-900/20"
+                          className="flex shrink-0 flex-col items-center gap-1"
                         >
-                          <span className="w-12 text-sm font-medium text-sky-800 dark:text-sky-200">
-                            {day.dayName}
+                          <span className="text-xs text-stone-500 tabular-nums dark:text-stone-400">
+                            {hour.time}
                           </span>
-                          <span className="w-8 text-center text-lg">
-                            {day.icon}
-                          </span>
-                          <span className="ml-2 flex-1 text-sm text-sky-700/70 dark:text-sky-300/60">
-                            {day.description}
-                          </span>
-                          {day.precipitationProbability > 0 && (
-                            <span className="mr-4 text-xs text-sky-500 dark:text-sky-500">
-                              💧 {day.precipitationProbability}%
-                            </span>
-                          )}
-                          <span className="w-16 text-right text-sm">
-                            <span className="font-medium text-sky-900 dark:text-sky-100">
-                              {day.temperatureMax}°
-                            </span>
-                            <span className="text-sky-500 dark:text-sky-500">
-                              {" "}
-                              {day.temperatureMin}°
-                            </span>
+                          <span className="text-base">{hour.icon}</span>
+                          <span className="text-sm font-medium text-stone-900 tabular-nums dark:text-stone-100">
+                            {hour.temperature}°
                           </span>
                         </div>
                       ))}
                     </div>
                   </div>
+                )}
+
+                {/* Daily */}
+                <div>
+                  <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                    7-day forecast
+                  </h3>
+                  <ul className="mt-3 divide-y divide-stone-100 dark:divide-stone-800">
+                    {city.weather.daily.map((day, i) => (
+                      <li
+                        key={i}
+                        className="flex items-center gap-4 py-2.5"
+                      >
+                        <span className="w-12 text-sm font-medium text-stone-900 dark:text-stone-100">
+                          {day.dayName}
+                        </span>
+                        <span className="w-6 text-center text-base">
+                          {day.icon}
+                        </span>
+                        <span className="flex-1 text-sm text-stone-500 dark:text-stone-400">
+                          {day.description}
+                        </span>
+                        {day.precipitationProbability > 0 && (
+                          <span className="flex items-center gap-1 text-xs text-emerald-600 tabular-nums dark:text-emerald-400">
+                            <Drop size={11} weight="fill" />
+                            {day.precipitationProbability}%
+                          </span>
+                        )}
+                        <span className="w-20 text-right text-sm tabular-nums">
+                          <span className="font-medium text-stone-900 dark:text-stone-100">
+                            {day.temperatureMax}°
+                          </span>
+                          <span className="ml-1 text-stone-400 dark:text-stone-500">
+                            {day.temperatureMin}°
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <p className="text-sm font-medium text-sky-400 dark:text-sky-500">
-                    Unable to load weather data
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-stone-400 dark:text-stone-500">
+                Unable to load weather for this city.
+              </p>
+            )}
+          </section>
+        ))}
       </div>
     </div>
   );

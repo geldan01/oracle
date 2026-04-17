@@ -8,7 +8,10 @@ interface VisibilityToggleProps {
   visibility: "INDIVIDUAL" | "HOUSEHOLD";
 }
 
-export default function VisibilityToggle({ skillId, visibility }: VisibilityToggleProps) {
+export default function VisibilityToggle({
+  skillId,
+  visibility,
+}: VisibilityToggleProps) {
   const [isPending, startTransition] = useTransition();
 
   function handleChange(mode: "INDIVIDUAL" | "HOUSEHOLD") {
@@ -19,31 +22,27 @@ export default function VisibilityToggle({ skillId, visibility }: VisibilityTogg
   }
 
   return (
-    <div className="mt-1 inline-flex rounded-lg border border-fuchsia-200 dark:border-fuchsia-800">
-      <button
-        type="button"
-        onClick={() => handleChange("INDIVIDUAL")}
-        disabled={isPending}
-        className={`rounded-l-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
-          visibility === "INDIVIDUAL"
-            ? "bg-fuchsia-500 text-white dark:bg-fuchsia-500"
-            : "bg-stone-100 text-fuchsia-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-fuchsia-300 dark:hover:bg-stone-700"
-        }`}
-      >
-        Just Me
-      </button>
-      <button
-        type="button"
-        onClick={() => handleChange("HOUSEHOLD")}
-        disabled={isPending}
-        className={`rounded-r-lg border-l border-fuchsia-200 px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 dark:border-fuchsia-800 ${
-          visibility === "HOUSEHOLD"
-            ? "bg-fuchsia-500 text-white dark:bg-fuchsia-500"
-            : "bg-stone-100 text-fuchsia-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-fuchsia-300 dark:hover:bg-stone-700"
-        }`}
-      >
-        Household
-      </button>
+    <div className="inline-flex rounded-full bg-stone-100 p-0.5 dark:bg-stone-800">
+      {(
+        [
+          { value: "INDIVIDUAL" as const, label: "Just Me" },
+          { value: "HOUSEHOLD" as const, label: "Household" },
+        ]
+      ).map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => handleChange(opt.value)}
+          disabled={isPending}
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-all active:scale-[0.96] disabled:opacity-50 ${
+            visibility === opt.value
+              ? "bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-stone-100"
+              : "text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }

@@ -34,20 +34,18 @@ export default async function EditMealPage({ params }: EditMealPageProps) {
   ]);
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-2xl space-y-6">
-        <div>
-          <Link
-            href={`/meals/${meal.id}`}
-            className="text-sm text-stone-500 transition-colors hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-          >
-            &larr; Back to {meal.name}
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-stone-800 dark:text-stone-100">
-            Edit Meal
-          </h1>
-        </div>
+    <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6">
+      <Link
+        href={`/meals/${meal.id}`}
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← {meal.name}
+      </Link>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+        Edit meal
+      </h1>
 
+      <div className="mt-10">
         <MealForm
           meal={{
             id: meal.id,

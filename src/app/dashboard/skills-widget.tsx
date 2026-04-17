@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Books, Star } from "@phosphor-icons/react/dist/ssr";
 
 interface SkillSummary {
   id: string;
@@ -13,55 +14,41 @@ interface SkillsWidgetProps {
 
 export default function SkillsWidget({ skills }: SkillsWidgetProps) {
   return (
-    <div
-      className="group relative overflow-hidden rounded-2xl border border-fuchsia-200/80 bg-linear-to-br from-fuchsia-50 to-purple-50 p-6 shadow-sm dark:border-fuchsia-900/40 dark:from-fuchsia-950/40 dark:to-purple-950/30"
-    >
-      <div className="absolute top-0 right-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full bg-fuchsia-200/30 dark:bg-fuchsia-800/20" />
-      <Link href="/skills" className="flex items-center gap-3 border-b border-fuchsia-200/60 pb-4 transition-colors hover:opacity-80 dark:border-fuchsia-800/40">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-fuchsia-500/15 text-2xl ring-1 ring-fuchsia-500/20 dark:bg-fuchsia-400/10 dark:ring-fuchsia-400/20">
-          <span role="img" aria-label="Skills">&#128218;</span>
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-fuchsia-900 dark:text-fuchsia-100">
-            Skills
-          </h2>
-          <p className="text-xs text-fuchsia-700/60 dark:text-fuchsia-300/50">
-            {skills.length} {skills.length === 1 ? "favourite" : "favourites"}
-          </p>
-        </div>
+    <section>
+      <Link
+        href="/skills"
+        className="group flex items-center gap-3 transition-opacity hover:opacity-70"
+      >
+        <Books size={20} weight="regular" className="text-fuchsia-600 dark:text-fuchsia-400" />
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Favourite Skills
+        </h2>
       </Link>
 
       {skills.length > 0 ? (
-        <ul className="mt-5 space-y-2">
+        <ul className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
           {skills.slice(0, 5).map((skill) => (
-            <li
-              key={skill.id}
-              className="flex items-center justify-between text-sm"
-            >
-              <span className="truncate text-fuchsia-800 dark:text-fuchsia-200">
-                {skill.title}
-              </span>
-              {skill.tags.length > 0 && (
-                <span className="ml-2 shrink-0 text-xs text-fuchsia-600/50 dark:text-fuchsia-400/40">
-                  {skill.tags[0].name}
-                  {skill.tags.length > 1 && ` +${skill.tags.length - 1}`}
-                </span>
-              )}
+            <li key={skill.id}>
+              <Link
+                href={`/skills/${skill.id}`}
+                className="flex items-center justify-between gap-3 py-2.5 text-sm text-stone-900 transition-colors hover:bg-stone-50 dark:text-stone-100 dark:hover:bg-stone-900"
+              >
+                <span className="truncate">{skill.title}</span>
+                {skill.tags.length > 0 && (
+                  <span className="ml-2 shrink-0 text-xs text-stone-400 dark:text-stone-500">
+                    {skill.tags[0].name}
+                    {skill.tags.length > 1 && ` +${skill.tags.length - 1}`}
+                  </span>
+                )}
+              </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-5 text-sm text-fuchsia-600/50 dark:text-fuchsia-400/40">
-          No favourites yet. Star a skill to pin it here.
+        <p className="mt-4 flex items-center gap-2 py-2 text-sm text-stone-400 dark:text-stone-500">
+          <Star size={14} weight="regular" /> Star a skill to pin it here
         </p>
       )}
-
-      <Link
-        href="/skills"
-        className="mt-4 block text-xs font-medium text-fuchsia-600/50 transition-colors hover:text-fuchsia-700 dark:text-fuchsia-400/40 dark:hover:text-fuchsia-300"
-      >
-        View all &rarr;
-      </Link>
-    </div>
+    </section>
   );
 }

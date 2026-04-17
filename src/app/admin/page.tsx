@@ -3,64 +3,39 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { promoteToAdmin, demoteToMember } from "@/lib/auth-actions";
 import { removeWeatherCity, setPrimaryCity } from "@/lib/weather-actions";
-import { getSystemSettings, setRegistrationEnabled } from "@/lib/settings-actions";
+import {
+  getSystemSettings,
+  setRegistrationEnabled,
+} from "@/lib/settings-actions";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/generated/prisma";
 import WeatherCitySearch from "@/components/WeatherCitySearch";
+import DashboardHeroUpload from "./dashboard-hero-upload";
 
-function PromoteButton({ userId }: { userId: string }) {
-  const promoteAction = promoteToAdmin.bind(null, userId);
-
-  return (
-    <form action={promoteAction}>
-      <button
-        type="submit"
-        className="rounded-md bg-amber-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
-      >
-        Promote to Admin
-      </button>
-    </form>
-  );
-}
-
-function DemoteButton({ userId }: { userId: string }) {
-  const demoteAction = demoteToMember.bind(null, userId);
-
-  return (
-    <form action={demoteAction}>
-      <button
-        type="submit"
-        className="rounded-md bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
-      >
-        Remove Admin
-      </button>
-    </form>
-  );
-}
-
-function SetPrimaryButton({ cityId }: { cityId: string }) {
-  const action = setPrimaryCity.bind(null, cityId);
+function ActionLink({
+  action,
+  label,
+  variant = "neutral",
+}: {
+  action: () => void;
+  label: string;
+  variant?: "neutral" | "danger" | "primary";
+}) {
+  const cls = {
+    neutral:
+      "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100",
+    danger:
+      "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
+    primary:
+      "text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-900/20",
+  }[variant];
   return (
     <form action={action}>
       <button
         type="submit"
-        className="rounded-md bg-sky-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
+        className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors active:scale-[0.96] ${cls}`}
       >
-        Set Primary
-      </button>
-    </form>
-  );
-}
-
-function RemoveCityButton({ cityId }: { cityId: string }) {
-  const action = removeWeatherCity.bind(null, cityId);
-  return (
-    <form action={action}>
-      <button
-        type="submit"
-        className="rounded-md bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
-      >
-        Remove
+        {label}
       </button>
     </form>
   );
@@ -94,209 +69,187 @@ export default async function AdminPage() {
   });
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-12">
-      <div className="w-full max-w-4xl space-y-6">
-        <div className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                Admin Panel
-              </h1>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Signed in as {currentUser.name ?? currentUser.email} ({currentUser.role})
-              </p>
-            </div>
-            <Link
-              href="/channels"
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
-            >
-              Manage Channels
-            </Link>
-          </div>
+    <div className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">
+            Admin
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+            Settings
+          </h1>
+          <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+            {currentUser.name ?? currentUser.email}
+          </p>
         </div>
-
-        {/* ── System Settings ── */}
-        <div className="rounded-lg bg-white shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              System Settings
-            </h2>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Global controls for the app.
-            </p>
-          </div>
-          <div className="flex items-center justify-between px-6 py-4">
-            <div>
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                Public registration
-              </p>
-              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                {settings.registrationEnabled
-                  ? "New visitors can create their own account from /register."
-                  : "The /register page is blocked. Only existing members can sign in."}
-              </p>
-            </div>
-            <form action={toggleRegistration}>
-              <button
-                type="submit"
-                className={`rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 ${
-                  settings.registrationEnabled
-                    ? "bg-red-600 hover:bg-red-500 focus:ring-red-500"
-                    : "bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-500"
-                }`}
-              >
-                {settings.registrationEnabled ? "Disable" : "Enable"}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Users
-            </h2>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              {users.length} registered {users.length === 1 ? "user" : "users"}
-            </p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-              <thead>
-                <tr className="bg-zinc-50 dark:bg-zinc-800/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Joined
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
-                  >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-900 dark:text-zinc-100">
-                      {user.name ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                      {user.email}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          user.role === Role.ADMIN
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
-                            : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                      {new Date(user.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right">
-                      {user.role === Role.MEMBER && (
-                        <PromoteButton userId={user.id} />
-                      )}
-                      {user.role === Role.ADMIN && user.id !== currentUser.id && (
-                        <DemoteButton userId={user.id} />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* ── Weather Cities ── */}
-        <div className="rounded-lg bg-white shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Weather Cities
-            </h2>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Configure which cities appear on the weather widget. The primary
-              city is shown on the dashboard.
-            </p>
-          </div>
-
-          <div className="px-6 py-4">
-            <WeatherCitySearch />
-          </div>
-
-          {weatherCities.length > 0 && (
-            <div className="overflow-x-auto border-t border-zinc-200 dark:border-zinc-800">
-              <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                <thead>
-                  <tr className="bg-zinc-50 dark:bg-zinc-800/50">
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      City
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      Country
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {weatherCities.map((city) => (
-                    <tr
-                      key={city.id}
-                      className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
-                    >
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-900 dark:text-zinc-100">
-                        {city.name}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {city.country}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        {city.isPrimary && (
-                          <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-400">
-                            Primary
-                          </span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {!city.isPrimary && (
-                            <SetPrimaryButton cityId={city.id} />
-                          )}
-                          <RemoveCityButton cityId={city.id} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <Link
+          href="/channels"
+          className="rounded-full px-3 py-1.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 active:scale-[0.98] dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+        >
+          Channels →
+        </Link>
       </div>
+
+      {/* System settings */}
+      <section className="mt-12">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          System
+        </h2>
+        <div className="mt-4 flex items-center justify-between border-b border-stone-200 py-4 dark:border-stone-800">
+          <div>
+            <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
+              Public registration
+            </p>
+            <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
+              {settings.registrationEnabled
+                ? "Anyone can create an account from /register."
+                : "Registration is closed. Only existing members can sign in."}
+            </p>
+          </div>
+          <form action={toggleRegistration}>
+            <button
+              type="submit"
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all active:scale-[0.96] ${
+                settings.registrationEnabled
+                  ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-stone-900 dark:hover:bg-emerald-400"
+              }`}
+            >
+              {settings.registrationEnabled ? "Disable" : "Enable"}
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* Dashboard hero image */}
+      <section className="mt-12">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Dashboard image
+        </h2>
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+          Shown at the top of the dashboard above the welcome message. A wide
+          (16:5) photo of your family, garden, or home works well.
+        </p>
+        <div className="mt-4">
+          <DashboardHeroUpload
+            currentImage={settings.dashboardHeroImage}
+            initialX={settings.dashboardHeroImageX}
+            initialY={settings.dashboardHeroImageY}
+          />
+        </div>
+      </section>
+
+      {/* Users */}
+      <section className="mt-12">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Members · {users.length}
+        </h2>
+        <ul className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
+          {users.map((user) => (
+            <li
+              key={user.id}
+              className="flex items-center justify-between gap-4 py-3"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
+                    {user.name ?? "—"}
+                  </p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
+                      user.role === Role.ADMIN
+                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                        : "text-stone-500 dark:text-stone-400"
+                    }`}
+                  >
+                    {user.role.toLowerCase()}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-500 dark:text-stone-400">
+                  {user.email} · joined{" "}
+                  {new Date(user.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {user.role === Role.MEMBER && (
+                  <ActionLink
+                    action={promoteToAdmin.bind(null, user.id)}
+                    label="Promote"
+                    variant="primary"
+                  />
+                )}
+                {user.role === Role.ADMIN && user.id !== currentUser.id && (
+                  <ActionLink
+                    action={demoteToMember.bind(null, user.id)}
+                    label="Demote"
+                    variant="danger"
+                  />
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Weather cities */}
+      <section className="mt-12">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Weather cities
+        </h2>
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+          Cities shown on the weather page. The primary one appears on the
+          dashboard.
+        </p>
+
+        <div className="mt-4">
+          <WeatherCitySearch />
+        </div>
+
+        {weatherCities.length > 0 && (
+          <ul className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
+            {weatherCities.map((city) => (
+              <li
+                key={city.id}
+                className="flex items-center justify-between gap-4 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
+                      {city.name}
+                    </p>
+                    {city.isPrimary && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    {city.country}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  {!city.isPrimary && (
+                    <ActionLink
+                      action={setPrimaryCity.bind(null, city.id)}
+                      label="Make primary"
+                      variant="primary"
+                    />
+                  )}
+                  <ActionLink
+                    action={removeWeatherCity.bind(null, city.id)}
+                    label="Remove"
+                    variant="danger"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

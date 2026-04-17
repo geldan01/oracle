@@ -7,7 +7,7 @@ export default function Footer() {
   });
 
   return (
-    <footer className="mt-auto bg-black px-4 py-4 text-center text-sm text-white sm:px-6">
+    <footer className="mt-auto border-t border-stone-200/80 px-4 py-5 text-center text-xs text-stone-400 sm:px-6 dark:border-stone-800/80 dark:text-stone-500">
       {today}
     </footer>
   );

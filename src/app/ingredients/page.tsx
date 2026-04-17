@@ -22,9 +22,7 @@ export default async function IngredientsPage({
   });
 
   const ingredients = await prisma.ingredient.findMany({
-    where: activeTag
-      ? { tags: { some: { name: activeTag } } }
-      : undefined,
+    where: activeTag ? { tags: { some: { name: activeTag } } } : undefined,
     include: {
       tags: { orderBy: { name: "asc" } },
       _count: { select: { usages: true } },
@@ -33,97 +31,89 @@ export default async function IngredientsPage({
   });
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-3xl space-y-8">
-        {/* Header */}
-        <div className="border-b border-amber-200/60 pb-6 dark:border-amber-900/30">
-          <Link
-            href="/meals"
-            className="text-sm text-stone-500 transition-colors hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-          >
-            &larr; Meals
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-stone-800 dark:text-stone-100">
+    <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <Link
+        href="/meals"
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← Meals
+      </Link>
+      <div className="mt-4 flex items-end justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">
+            {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""}
+            {activeTag ? ` · #${activeTag}` : ""}
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
             Ingredients
           </h1>
-          <p className="text-sm text-stone-500 dark:text-stone-400">
-            {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""}
-            {activeTag ? ` tagged "${activeTag}"` : ""}
-          </p>
         </div>
+      </div>
 
-        {/* Tag filters */}
-        {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+      {allTags.length > 0 && (
+        <div className="mt-8 flex flex-wrap items-center gap-2 border-b border-stone-200 pb-4 dark:border-stone-800">
+          <Link
+            href="/ingredients"
+            className={`rounded-full px-2.5 py-0.5 text-xs transition-colors ${
+              !activeTag
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                : "text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+            }`}
+          >
+            all
+          </Link>
+          {allTags.map((tag) => (
             <Link
-              href="/ingredients"
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                !activeTag
-                  ? "bg-amber-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+              key={tag.id}
+              href={`/ingredients?tag=${encodeURIComponent(tag.name)}`}
+              className={`rounded-full px-2.5 py-0.5 text-xs transition-colors ${
+                activeTag === tag.name
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                  : "text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
               }`}
             >
-              All
+              #{tag.name}
+              <span className="ml-1 text-stone-400 tabular-nums dark:text-stone-500">
+                {tag._count.ingredients}
+              </span>
             </Link>
-            {allTags.map((tag) => (
-              <Link
-                key={tag.id}
-                href={`/ingredients?tag=${encodeURIComponent(tag.name)}`}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  activeTag === tag.name
-                    ? "bg-amber-600 text-white"
-                    : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
-                }`}
-              >
-                {tag.name} ({tag._count.ingredients})
-              </Link>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
+      )}
 
-        {/* Ingredient list */}
-        {ingredients.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {ingredients.map((ing) => (
+      {ingredients.length > 0 ? (
+        <ul className="mt-8 grid grid-cols-1 divide-y divide-stone-100 sm:grid-cols-2 sm:divide-y-0 sm:gap-x-8 lg:grid-cols-3 dark:divide-stone-800">
+          {ingredients.map((ing) => (
+            <li
+              key={ing.id}
+              className="border-b border-stone-100 sm:border-b dark:border-stone-800"
+            >
               <Link
-                key={ing.id}
                 href={`/ingredients/${ing.id}`}
-                className="group flex items-center justify-between rounded-lg border border-stone-200 bg-white px-4 py-3 transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-stone-700 dark:bg-stone-900"
+                className="flex items-center justify-between gap-3 py-3 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
               >
-                <div className="min-w-0">
-                  <span className="block text-sm font-medium text-stone-700 group-hover:text-amber-700 dark:text-stone-300 dark:group-hover:text-amber-400">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-stone-900 dark:text-stone-100">
                     {ing.name}
-                  </span>
+                  </p>
                   {ing.tags.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {ing.tags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="rounded-full bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500 dark:bg-stone-800 dark:text-stone-400"
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
+                      {ing.tags.map((t) => `#${t.name}`).join(" ")}
+                    </p>
                   )}
                 </div>
-                <span className="ml-2 shrink-0 text-xs text-stone-400">
-                  {ing._count.usages} {ing._count.usages === 1 ? "meal" : "meals"}
+                <span className="shrink-0 text-xs text-stone-400 tabular-nums dark:text-stone-500">
+                  {ing._count.usages}
                 </span>
               </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 py-16 dark:border-stone-700">
-            <p className="text-lg text-stone-400 dark:text-stone-500">
-              No ingredients yet
-            </p>
-            <p className="mt-1 text-sm text-stone-300 dark:text-stone-600">
-              Ingredients are added when you create meals
-            </p>
-          </div>
-        )}
-      </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-12 text-sm text-stone-400 dark:text-stone-500">
+          No ingredients yet — they appear here as you create meals.
+        </p>
+      )}
     </div>
   );
 }
