@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Star } from "@phosphor-icons/react";
 import { rateMeal } from "@/lib/meal-actions";
 
 interface StarRatingProps {
@@ -19,32 +20,32 @@ export default function StarRating({ mealId, currentRating }: StarRatingProps) {
   }
 
   return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          disabled={isPending}
-          onMouseEnter={() => setHovered(star)}
-          onMouseLeave={() => setHovered(0)}
-          onClick={() => handleRate(star)}
-          className="text-2xl transition-colors disabled:opacity-50"
-          aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
-        >
-          <span
-            className={
-              star <= (hovered || currentRating || 0)
-                ? "text-amber-400"
-                : "text-stone-300 dark:text-stone-600"
-            }
+    <div className="flex items-center gap-1.5">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const filled = star <= (hovered || currentRating || 0);
+        return (
+          <button
+            key={star}
+            type="button"
+            disabled={isPending}
+            onMouseEnter={() => setHovered(star)}
+            onMouseLeave={() => setHovered(0)}
+            onClick={() => handleRate(star)}
+            className="transition-transform active:scale-90 disabled:opacity-50"
+            aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
           >
-            &#9733;
-          </span>
-        </button>
-      ))}
-      {currentRating && (
-        <span className="ml-2 text-sm text-stone-400">Your rating</span>
-      )}
+            <Star
+              size={20}
+              weight={filled ? "fill" : "regular"}
+              className={
+                filled
+                  ? "text-amber-500 dark:text-amber-400"
+                  : "text-stone-300 dark:text-stone-600"
+              }
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { register } from "@/lib/auth-actions";
 
 function validateAndRegister(
   _prevState: { error: string } | undefined,
-  formData: FormData
+  formData: FormData,
 ) {
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
@@ -21,123 +21,111 @@ function validateAndRegister(
 export default function RegisterForm() {
   const [state, formAction, pending] = useActionState(
     validateAndRegister,
-    undefined
+    undefined,
   );
-
   const error = state?.error;
 
+  const inputClass =
+    "block w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-100 dark:placeholder-stone-500";
+  const labelClass =
+    "block text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400";
+
   return (
-    <div className="flex min-h-full flex-1 items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Create an account
-          </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Get started with Oracle
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <form action={formAction} className="space-y-5">
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-950/50">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                autoComplete="name"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="Your name"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="new-password"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="Create a password"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                autoComplete="new-password"
-                className="mt-1.5 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
-                placeholder="Confirm your password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={pending}
-              className="w-full rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-offset-zinc-900"
-            >
-              {pending ? "Creating account..." : "Create account"}
-            </button>
-          </form>
-        </div>
-
-        <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
-          >
-            Sign in
-          </Link>
+    <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-sm flex-col justify-center px-4 py-12">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">
+          New here
         </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+          Create account
+        </h1>
       </div>
+
+      <form action={formAction} className="mt-10 space-y-6">
+        {error && (
+          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="name" className={labelClass}>
+            Name
+          </label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            required
+            autoComplete="name"
+            className={`mt-2 ${inputClass}`}
+            placeholder="Your name"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email" className={labelClass}>
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            className={`mt-2 ${inputClass}`}
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className={labelClass}>
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autoComplete="new-password"
+            className={`mt-2 ${inputClass}`}
+            placeholder="Create a password"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className={labelClass}>
+            Confirm
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            required
+            autoComplete="new-password"
+            className={`mt-2 ${inputClass}`}
+            placeholder="Confirm your password"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 dark:bg-emerald-500 dark:text-stone-900 dark:hover:bg-emerald-400"
+        >
+          {pending ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+
+      <p className="mt-8 text-center text-sm text-stone-500 dark:text-stone-400">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
+        >
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 }

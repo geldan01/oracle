@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { ForkKnife } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import IngredientTags from "./ingredient-tags";
@@ -23,9 +24,7 @@ export default async function IngredientDetailPage({
       tags: { orderBy: { name: "asc" } },
       usages: {
         include: {
-          meal: {
-            select: { id: true, name: true, imageUrl: true },
-          },
+          meal: { select: { id: true, name: true, imageUrl: true } },
         },
         orderBy: { meal: { name: "asc" } },
       },
@@ -38,60 +37,53 @@ export default async function IngredientDetailPage({
     orderBy: { name: "asc" },
   });
 
-  // Deduplicate meals (same ingredient can appear in a meal only once, but just in case)
   const uniqueMeals = Array.from(
-    new Map(ingredient.usages.map((u) => [u.meal.id, u.meal])).values()
+    new Map(ingredient.usages.map((u) => [u.meal.id, u.meal])).values(),
   );
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-3xl space-y-8">
-        {/* Header */}
-        <div>
-          <Link
-            href="/ingredients"
-            className="text-sm text-stone-500 transition-colors hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
-          >
-            &larr; Ingredients
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-stone-800 dark:text-stone-100">
-            {ingredient.name}
-          </h1>
-          <p className="text-sm text-stone-500 dark:text-stone-400">
-            Used in {uniqueMeals.length}{" "}
-            {uniqueMeals.length === 1 ? "meal" : "meals"}
-          </p>
-        </div>
+    <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
+      <Link
+        href="/ingredients"
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← Ingredients
+      </Link>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+        {ingredient.name}
+      </h1>
+      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+        Used in {uniqueMeals.length}{" "}
+        {uniqueMeals.length === 1 ? "meal" : "meals"}
+      </p>
 
-        {/* Tags / Grocery sections */}
-        <div>
-          <h2 className="text-sm font-medium text-stone-700 dark:text-stone-300">
-            Grocery Section
-          </h2>
-          <div className="mt-3">
-            <IngredientTags
-              ingredientId={ingredient.id}
-              currentTags={ingredient.tags.map((t) => t.name)}
-              allExistingTags={allTags.map((t) => t.name)}
-            />
-          </div>
+      <div className="mt-10">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Grocery section
+        </h2>
+        <div className="mt-3">
+          <IngredientTags
+            ingredientId={ingredient.id}
+            currentTags={ingredient.tags.map((t) => t.name)}
+            allExistingTags={allTags.map((t) => t.name)}
+          />
         </div>
+      </div>
 
-        {/* Meals that use this ingredient */}
-        <div>
-          <h2 className="text-sm font-medium text-stone-700 dark:text-stone-300">
-            Meals
-          </h2>
-          {uniqueMeals.length > 0 ? (
-            <div className="mt-3 space-y-2">
-              {uniqueMeals.map((meal) => (
+      <div className="mt-10">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Meals
+        </h2>
+        {uniqueMeals.length > 0 ? (
+          <ul className="mt-3 divide-y divide-stone-100 dark:divide-stone-800">
+            {uniqueMeals.map((meal) => (
+              <li key={meal.id}>
                 <Link
-                  key={meal.id}
                   href={`/meals/${meal.id}`}
-                  className="group flex items-center gap-3 rounded-lg border border-stone-200 bg-white px-4 py-3 transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-stone-700 dark:bg-stone-900"
+                  className="flex items-center gap-3 py-2.5 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
                 >
                   {meal.imageUrl ? (
-                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-800">
+                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded bg-stone-100 dark:bg-stone-800">
                       <Image
                         src={meal.imageUrl}
                         alt=""
@@ -100,24 +92,22 @@ export default async function IngredientDetailPage({
                       />
                     </div>
                   ) : (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-lg dark:bg-stone-800">
-                      <span className="text-stone-300 dark:text-stone-600">
-                        &#127858;
-                      </span>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-stone-100 dark:bg-stone-800">
+                      <ForkKnife size={14} className="text-stone-400" />
                     </div>
                   )}
-                  <span className="text-sm font-medium text-stone-700 group-hover:text-amber-700 dark:text-stone-300 dark:group-hover:text-amber-400">
+                  <span className="text-sm text-stone-900 dark:text-stone-100">
                     {meal.name}
                   </span>
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-3 text-sm text-stone-400">
-              Not used in any meals yet.
-            </p>
-          )}
-        </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-stone-400 dark:text-stone-500">
+            Not used in any meals yet.
+          </p>
+        )}
       </div>
     </div>
   );

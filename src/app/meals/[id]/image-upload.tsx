@@ -2,6 +2,7 @@
 
 import { useRef, useTransition } from "react";
 import Image from "next/image";
+import { Camera } from "@phosphor-icons/react";
 import { uploadMealImage } from "@/lib/meal-actions";
 
 interface ImageUploadProps {
@@ -31,7 +32,7 @@ export default function ImageUpload({
   return (
     <div>
       {currentImage ? (
-        <div className="relative aspect-video overflow-hidden rounded-xl">
+        <div className="relative aspect-video overflow-hidden rounded-lg">
           <Image
             src={currentImage}
             alt="Meal"
@@ -42,9 +43,9 @@ export default function ImageUpload({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={isPending}
-            className="absolute right-3 bottom-3 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/80 disabled:opacity-50"
+            className="absolute bottom-3 right-3 rounded-full bg-stone-900/70 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-stone-900 active:scale-[0.98] disabled:opacity-50"
           >
-            {isPending ? "Uploading..." : "Change photo"}
+            {isPending ? "Uploading…" : "Change photo"}
           </button>
         </div>
       ) : (
@@ -52,13 +53,11 @@ export default function ImageUpload({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={isPending}
-          className="flex aspect-video w-full items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 transition-colors hover:border-amber-400 hover:bg-amber-50 disabled:opacity-50 dark:border-stone-600 dark:bg-stone-800 dark:hover:border-amber-500 dark:hover:bg-stone-700"
+          className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-stone-300 transition-colors hover:border-emerald-400 hover:bg-emerald-50/50 disabled:opacity-50 dark:border-stone-700 dark:hover:border-emerald-500 dark:hover:bg-emerald-900/10"
         >
-          <div className="text-center">
-            <p className="text-3xl">&#128247;</p>
-            <p className="mt-1 text-sm text-stone-400">
-              {isPending ? "Uploading..." : "Upload a photo"}
-            </p>
+          <div className="flex flex-col items-center gap-2 text-stone-400 dark:text-stone-500">
+            <Camera size={24} weight="regular" />
+            <p className="text-sm">{isPending ? "Uploading…" : "Upload a photo"}</p>
           </div>
         </button>
       )}

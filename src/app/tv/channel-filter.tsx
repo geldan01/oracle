@@ -27,7 +27,7 @@ export default function ChannelFilter({
     <select
       value={currentChannel ?? ""}
       onChange={handleChange}
-      className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-stone-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none dark:border-violet-800 dark:bg-stone-900 dark:text-stone-100"
+      className="rounded-full border-0 bg-stone-100 px-3 py-1 text-sm text-stone-700 outline-none transition-colors hover:bg-stone-200 focus:ring-2 focus:ring-emerald-500/30 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
     >
       <option value="">All channels</option>
       {channels.map((c) => (

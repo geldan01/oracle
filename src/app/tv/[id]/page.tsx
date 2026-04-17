@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { Television, Star } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { getShowById, getChannels } from "@/lib/tv-actions";
 import ShowStarRating from "./show-star-rating";
@@ -7,7 +8,11 @@ import ChannelSelector from "./channel-selector";
 import ShowActions from "./show-actions";
 import SeasonSection from "./season-section";
 
-export default async function ShowDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ShowDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await auth();
   if (!session) redirect("/login");
 
@@ -25,11 +30,11 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
       ? show.ratings.reduce((sum, r) => sum + r.rating, 0) / show.ratings.length
       : null;
 
-  // Find which season has the next unwatched episode to auto-open it
   let autoOpenSeason: number | null = null;
   for (const season of show.seasons) {
     const hasUnwatched = season.episodes.some(
-      (ep) => ep.airDate && ep.airDate <= new Date() && ep.watchedBy.length === 0
+      (ep) =>
+        ep.airDate && ep.airDate <= new Date() && ep.watchedBy.length === 0,
     );
     if (hasUnwatched) {
       autoOpenSeason = season.seasonNumber;
@@ -38,135 +43,154 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-4xl space-y-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-stone-400 dark:text-stone-500">
-          <Link href="/tv" className="hover:text-violet-600 dark:hover:text-violet-400">
-            TV Shows
-          </Link>
-          <span>/</span>
-          <span className="text-stone-700 dark:text-stone-300">{show.name}</span>
-        </div>
+    <div className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6">
+      {/* Breadcrumb */}
+      <Link
+        href="/tv"
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← Television
+      </Link>
 
-        {/* Show header */}
-        <div className="flex gap-6">
-          {show.posterPath ? (
-            <img
-              src={`https://image.tmdb.org/t/p/w342${show.posterPath}`}
-              alt={show.name}
-              className="h-64 w-44 shrink-0 rounded-xl object-cover shadow-lg"
-            />
-          ) : (
-            <div className="flex h-64 w-44 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-lg text-violet-400 shadow-lg dark:bg-violet-900/40">
-              No Image
-            </div>
-          )}
-          <div className="min-w-0 flex-1 space-y-4">
-            <div>
-              <h1 className="text-3xl font-bold text-stone-900 dark:text-stone-100">
-                {show.name}
-              </h1>
-              {isReadOnly && show.owner && (
-                <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
-                  {show.owner.name ?? "Another member"}&apos;s show — read only
-                </p>
-              )}
-            </div>
+      {/* Show header */}
+      <div className="mt-6 flex flex-col gap-8 md:flex-row">
+        {show.posterPath ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`https://image.tmdb.org/t/p/w342${show.posterPath}`}
+            alt={show.name}
+            className="h-72 w-48 shrink-0 self-start rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-72 w-48 shrink-0 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-800">
+            <Television size={32} className="text-stone-400" />
+          </div>
+        )}
 
-            {/* Ratings */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500 dark:text-stone-400">
+        <div className="min-w-0 flex-1 space-y-6">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+              {show.name}
+            </h1>
+            {isReadOnly && show.owner && (
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                {show.owner.name ?? "Another member"}&apos;s show — read only
+              </p>
+            )}
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
               {show.tmdbRating != null && (
-                <span>TMDB {show.tmdbRating.toFixed(1)}/10</span>
+                <span className="tabular-nums">
+                  TMDB {show.tmdbRating.toFixed(1)}
+                </span>
               )}
               {show.imdbId && (
                 <a
                   href={`https://www.imdb.com/title/${show.imdbId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-amber-600 hover:underline dark:text-amber-400"
+                  className="text-emerald-600 underline-offset-2 hover:underline dark:text-emerald-400"
                 >
                   IMDb
                 </a>
               )}
               {avgRating != null && (
-                <span>
-                  Household avg: {avgRating.toFixed(1)}/5
+                <span className="tabular-nums">
+                  Household {avgRating.toFixed(1)}
                 </span>
               )}
               {show.firstAirDate && (
                 <span>
-                  First aired: {show.firstAirDate.toLocaleDateString()}
+                  First aired {show.firstAirDate.toLocaleDateString()}
                 </span>
               )}
             </div>
+          </div>
 
-            {/* Your rating */}
-            <div>
-              <p className="mb-1 text-xs font-medium text-stone-500 dark:text-stone-400">
-                Your Rating
-              </p>
-              <ShowStarRating showId={show.id} currentRating={userRating?.rating ?? null} />
-              {otherRatings.length > 0 && (
-                <ul className="mt-3 space-y-1">
-                  {otherRatings.map((r) => (
-                    <li
-                      key={r.id}
-                      className="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400"
-                    >
-                      <span className="min-w-20 truncate">
-                        {r.user.name ?? r.user.email}
-                      </span>
-                      <span className="text-amber-500">
-                        {"\u2605".repeat(r.rating)}
-                        <span className="text-stone-300 dark:text-stone-600">
-                          {"\u2606".repeat(5 - r.rating)}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          {/* Your rating */}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+              Your Rating
+            </p>
+            <div className="mt-2">
+              <ShowStarRating
+                showId={show.id}
+                currentRating={userRating?.rating ?? null}
+              />
             </div>
+            {otherRatings.length > 0 && (
+              <ul className="mt-3 space-y-1">
+                {otherRatings.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400"
+                  >
+                    <span className="min-w-20 truncate">
+                      {r.user.name ?? r.user.email}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-amber-500 dark:text-amber-400">
+                      {Array.from({ length: r.rating }).map((_, i) => (
+                        <Star key={i} size={11} weight="fill" />
+                      ))}
+                      {Array.from({ length: 5 - r.rating }).map((_, i) => (
+                        <Star
+                          key={`o-${i}`}
+                          size={11}
+                          weight="regular"
+                          className="text-stone-300 dark:text-stone-600"
+                        />
+                      ))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-            {/* Channel */}
-            {!isReadOnly && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-stone-500 dark:text-stone-400">
-                  Watching on
-                </p>
+          {/* Channel */}
+          {!isReadOnly && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                Watching on
+              </p>
+              <div className="mt-2">
                 <ChannelSelector
                   showId={show.id}
                   currentChannelId={show.channelId}
                   channels={channels}
                 />
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Status and actions */}
-            {!isReadOnly && (
-              <ShowActions showId={show.id} currentStatus={show.status} watchMode={show.watchMode} />
-            )}
-          </div>
+          {/* Status and actions */}
+          {!isReadOnly && (
+            <ShowActions
+              showId={show.id}
+              currentStatus={show.status}
+              watchMode={show.watchMode}
+            />
+          )}
         </div>
+      </div>
 
-        {/* Overview */}
-        {show.overview && (
-          <div className="rounded-xl border border-stone-200/80 bg-white p-5 dark:border-stone-800 dark:bg-stone-900/60">
-            <h2 className="mb-2 text-sm font-semibold text-stone-700 dark:text-stone-300">
-              Overview
-            </h2>
-            <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-400">
-              {show.overview}
-            </p>
-          </div>
-        )}
-
-        {/* Seasons */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-stone-800 dark:text-stone-200">
-            Seasons ({show.seasons.length})
+      {/* Overview */}
+      {show.overview && (
+        <div className="mt-12">
+          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+            Overview
           </h2>
+          <p className="mt-3 max-w-[65ch] text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+            {show.overview}
+          </p>
+        </div>
+      )}
+
+      {/* Seasons */}
+      <div className="mt-12">
+        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+          Seasons ({show.seasons.length})
+        </h2>
+        <div className="mt-4 space-y-2">
           {show.seasons.map((season) => (
             <SeasonSection
               key={season.id}

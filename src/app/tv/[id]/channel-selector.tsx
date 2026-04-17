@@ -24,7 +24,7 @@ export default function ChannelSelector({ showId, currentChannelId, channels }: 
       value={currentChannelId ?? ""}
       onChange={handleChange}
       disabled={isPending}
-      className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm text-stone-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none disabled:opacity-50 dark:border-violet-800 dark:bg-stone-900 dark:text-stone-100"
+      className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
     >
       <option value="">No channel</option>
       {channels.map((ch) => (

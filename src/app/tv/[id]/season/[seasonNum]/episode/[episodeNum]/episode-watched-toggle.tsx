@@ -22,13 +22,13 @@ export default function EpisodeWatchedToggle({ episodeId, watched }: EpisodeWatc
       type="button"
       onClick={handleToggle}
       disabled={isPending}
-      className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+      className={`rounded-full px-4 py-2 text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 ${
         watched
-          ? "border border-stone-300 bg-stone-100 text-stone-600 hover:bg-stone-200 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
-          : "bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
+          ? "bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+          : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-stone-900 dark:hover:bg-emerald-400"
       }`}
     >
-      {isPending ? "Updating..." : watched ? "Mark as Unwatched" : "Mark as Watched"}
+      {isPending ? "Updating…" : watched ? "Mark unwatched" : "Mark watched"}
     </button>
   );
 }

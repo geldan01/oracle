@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { CaretRight, ListChecks } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -18,121 +19,107 @@ export default async function TodoListsPage() {
   const lists = await prisma.todoList.findMany({
     include: {
       items: true,
-      preferences: {
-        where: { userId: session.user.id },
-      },
+      preferences: { where: { userId: session.user.id } },
     },
     orderBy: { createdAt: "desc" },
   });
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-12">
-      <div className="w-full max-w-2xl space-y-6">
-        {/* Header */}
-        <div className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Our TODO Lists
-            </h1>
-            <Link
-              href="/dashboard"
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-              &larr; Dashboard
-            </Link>
-          </div>
-        </div>
+    <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
+      <Link
+        href="/dashboard"
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← Dashboard
+      </Link>
+      <h1 className="mt-4 flex items-center gap-3 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+        <ListChecks size={28} weight="duotone" className="text-amber-500 dark:text-amber-400" />
+        Shared Todos
+      </h1>
 
-        {/* New List Form */}
-        <div className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Create a new list
-          </h2>
-          <form action={createTodoList} className="mt-4 flex gap-3">
-            <input
-              type="text"
-              name="name"
-              placeholder="List name..."
-              required
-              className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500"
-            />
-            <button
-              type="submit"
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              New list
-            </button>
-          </form>
-        </div>
+      {/* New list */}
+      <form action={createTodoList} className="mt-8 flex gap-2">
+        <input
+          type="text"
+          name="name"
+          placeholder="New list name…"
+          required
+          className="flex-1 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:placeholder-stone-500"
+        />
+        <button
+          type="submit"
+          className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-stone-900 dark:hover:bg-emerald-400"
+        >
+          Create
+        </button>
+      </form>
 
-        {/* Lists */}
+      {/* Lists */}
+      <div className="mt-10">
         {lists.length === 0 ? (
-          <div className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
-            <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-              No lists yet. Create one above to get started.
-            </p>
-          </div>
+          <p className="py-8 text-sm text-stone-400 dark:text-stone-500">
+            No lists yet. Create one above to get started.
+          </p>
         ) : (
-          <div className="space-y-4">
+          <ul className="divide-y divide-stone-100 dark:divide-stone-800">
             {lists.map((list) => {
-              const completedCount = list.items.filter(
-                (item) => item.done
-              ).length;
+              const completedCount = list.items.filter((i) => i.done).length;
               const totalCount = list.items.length;
               const showOnDashboard =
                 list.preferences.length === 0 ||
                 list.preferences[0].showOnDashboard;
 
               return (
-                <div
+                <li
                   key={list.id}
-                  className="rounded-lg bg-white p-6 shadow ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800"
+                  className="group flex items-center justify-between gap-4 py-4"
                 >
-                  <div className="flex items-center justify-between gap-4">
+                  <Link
+                    href={`/dashboard/todos/${list.id}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400"
+                  >
                     <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/dashboard/todos/${list.id}`}
-                        className="text-lg font-semibold text-zinc-900 hover:underline dark:text-zinc-100"
-                      >
+                      <p className="truncate text-base font-medium text-stone-900 dark:text-stone-100">
                         {list.name}
-                      </Link>
-                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                      </p>
+                      <p className="text-xs text-stone-500 tabular-nums dark:text-stone-400">
                         {totalCount === 0
                           ? "No items"
-                          : `${completedCount}/${totalCount} completed`}
+                          : `${completedCount}/${totalCount} done`}
                       </p>
                     </div>
+                    <CaretRight
+                      size={14}
+                      className="text-stone-300 dark:text-stone-600"
+                    />
+                  </Link>
 
-                    <div className="flex items-center gap-2">
-                      <form
-                        action={toggleListOnDashboard.bind(null, list.id)}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <form action={toggleListOnDashboard.bind(null, list.id)}>
+                      <button
+                        type="submit"
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium transition-all active:scale-[0.96] ${
+                          showOnDashboard
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+                            : "text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                        }`}
                       >
-                        <button
-                          type="submit"
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium shadow-sm ${
-                            showOnDashboard
-                              ? "border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
-                              : "border border-zinc-300 bg-zinc-50 text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                          }`}
-                        >
-                          {showOnDashboard ? "On dashboard" : "Hidden"}
-                        </button>
-                      </form>
-
-                      <form action={deleteTodoList.bind(null, list.id)}>
-                        <button
-                          type="submit"
-                          className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
-                        >
-                          Delete
-                        </button>
-                      </form>
-                    </div>
+                        {showOnDashboard ? "Pinned" : "Hidden"}
+                      </button>
+                    </form>
+                    <form action={deleteTodoList.bind(null, list.id)}>
+                      <button
+                        type="submit"
+                        className="rounded-full px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 active:scale-[0.96] dark:text-red-400 dark:hover:bg-red-900/20"
+                      >
+                        Delete
+                      </button>
+                    </form>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
     </div>

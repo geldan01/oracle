@@ -287,6 +287,9 @@ model SkillTag {
 model SystemSettings {
   id                  Int      @id @default(1)
   registrationEnabled Boolean  @default(true)
+  dashboardHeroImage  String?
+  dashboardHeroImageX Float    @default(50)
+  dashboardHeroImageY Float    @default(50)
   updatedAt           DateTime @updatedAt
 }
 

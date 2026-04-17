@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { getChannels, createChannel } from "@/lib/tv-actions";
 import ChannelRow from "./channel-row";
@@ -12,62 +13,53 @@ export default async function ChannelsPage() {
   const isAdmin = session.user.role === "ADMIN";
 
   return (
-    <div className="flex min-h-full flex-1 items-start justify-center px-4 py-10 sm:px-6">
-      <div className="w-full max-w-lg space-y-8">
-        <div className="flex items-center justify-between border-b border-violet-200/60 pb-4 dark:border-violet-900/30">
-          <div>
-            <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-100">
-              Channels
-            </h1>
-            <p className="mt-1 text-sm text-violet-600/70 dark:text-violet-400/60">
-              Streaming services &amp; TV providers
-            </p>
-          </div>
-          <Link
-            href="/tv"
-            className="text-sm text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-200"
-          >
-            &larr; TV Shows
-          </Link>
-        </div>
+    <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6">
+      <Link
+        href="/tv"
+        className="text-xs font-medium uppercase tracking-[0.18em] text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300"
+      >
+        ← Television
+      </Link>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+        Channels
+      </h1>
+      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+        Streaming services and TV providers.
+      </p>
 
-        {/* Add channel form */}
-        <form action={createChannel} className="flex gap-3">
-          <input
-            type="text"
-            name="name"
-            placeholder="Add a channel (e.g. Netflix, Prime, Bell)..."
-            required
-            className="flex-1 rounded-lg border border-violet-200 bg-white px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none dark:border-violet-800 dark:bg-stone-900 dark:text-stone-100 dark:placeholder-stone-500"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
-          >
-            Add
-          </button>
-        </form>
+      <form action={createChannel} className="mt-8 flex gap-2">
+        <input
+          type="text"
+          name="name"
+          placeholder="Add a channel (Netflix, Prime, Bell…)"
+          required
+          className="flex-1 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:placeholder-stone-500"
+        />
+        <button
+          type="submit"
+          className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-stone-900 dark:hover:bg-emerald-400"
+        >
+          <Plus size={14} weight="bold" />
+          Add
+        </button>
+      </form>
 
-        {/* Channel list */}
-        {channels.length > 0 ? (
-          <ul className="divide-y divide-violet-100 rounded-xl border border-violet-200/80 bg-white dark:divide-violet-900/40 dark:border-violet-900/40 dark:bg-stone-900/60">
-            {channels.map((channel) => (
-              <ChannelRow
-                key={channel.id}
-                id={channel.id}
-                name={channel.name}
-                isAdmin={isAdmin}
-              />
-            ))}
-          </ul>
-        ) : (
-          <div className="rounded-xl border border-dashed border-violet-300/60 py-12 text-center dark:border-violet-700/40">
-            <p className="text-sm text-violet-400 dark:text-violet-500">
-              No channels yet. Add your first one above.
-            </p>
-          </div>
-        )}
-      </div>
+      {channels.length > 0 ? (
+        <ul className="mt-8 divide-y divide-stone-100 dark:divide-stone-800">
+          {channels.map((channel) => (
+            <ChannelRow
+              key={channel.id}
+              id={channel.id}
+              name={channel.name}
+              isAdmin={isAdmin}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-12 text-sm text-stone-400 dark:text-stone-500">
+          No channels yet. Add your first one above.
+        </p>
+      )}
     </div>
   );
 }
