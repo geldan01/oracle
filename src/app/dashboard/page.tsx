@@ -18,6 +18,7 @@ export default async function DashboardPage() {
   }
 
   const user = session.user;
+  const firstName = user.name?.split(" ")[0] ?? user.email;
 
   const todoLists = await prisma.todoList.findMany({
     where: {
@@ -133,19 +134,19 @@ export default async function DashboardPage() {
           {today.toLocaleDateString("en-US", { weekday: "long" })}
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
-          Hello, {user.name ?? user.email}
+          Hi {firstName}!
         </h1>
       </div>
 
       {/* Bento layout — TV up next is the hero (full width on mobile, 2/3 on desktop) */}
       <div className="grid grid-cols-1 gap-x-12 gap-y-12 lg:grid-cols-3">
         {/* Up Next — featured */}
-        <div className="lg:col-span-2">
+        <div className="order-2 lg:order-1 lg:col-span-2">
           <TvWidget episodes={dedupedEpisodes} />
         </div>
 
-        {/* Weather — top right */}
-        <section>
+        {/* Weather — top right (top on mobile) */}
+        <section className="order-1 lg:order-2">
           <Link
             href="/weather"
             className="group flex items-center gap-3 transition-opacity hover:opacity-70"
@@ -189,7 +190,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Todos — left side, second row */}
-        <section className="lg:col-span-2">
+        <section className="order-3 lg:col-span-2">
           <Link
             href="/dashboard/todos"
             className="group flex items-center gap-3 transition-opacity hover:opacity-70"
@@ -239,16 +240,18 @@ export default async function DashboardPage() {
         </section>
 
         {/* Meal planner — right side, second row */}
-        <MealPlanWidget
-          todayEntries={todayMealEntries.map((e) => ({
-            id: e.id,
-            meal: { id: e.meal.id, name: e.meal.name },
-          }))}
-          todayDate={todayDate}
-        />
+        <div className="order-4">
+          <MealPlanWidget
+            todayEntries={todayMealEntries.map((e) => ({
+              id: e.id,
+              meal: { id: e.meal.id, name: e.meal.name },
+            }))}
+            todayDate={todayDate}
+          />
+        </div>
 
         {/* Skills — full width below */}
-        <div className="lg:col-span-2">
+        <div className="order-5 lg:col-span-2">
           <SkillsWidget
             skills={dashboardSkills.map((s) => ({
               id: s.id,
@@ -260,7 +263,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Projects placeholder — slim */}
-        <section>
+        <section className="order-6">
           <div className="flex items-center gap-3 opacity-50">
             <Hammer
               size={20}
