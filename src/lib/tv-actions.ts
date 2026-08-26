@@ -74,6 +74,24 @@ export async function updateChannel(id: string, formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+// ── Profile ──
+
+export async function getFamilyMembers() {
+  return prisma.user.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, email: true },
+  });
+}
+
+export async function updateShowProfile(showId: string, userId: string | null) {
+  await requireAuth();
+  await prisma.tvShow.update({
+    where: { id: showId },
+    data: { profileUserId: userId || null },
+  });
+  revalidatePath(`/tv/${showId}`);
+}
+
 // ── Watch Mode ──
 
 export async function updateWatchMode(showId: string, watchMode: WatchMode) {
@@ -367,6 +385,7 @@ export async function getShowById(showId: string) {
     include: {
       channel: true,
       owner: { select: { id: true, name: true } },
+      profileUser: { select: { id: true, name: true, email: true } },
       ratings: {
         include: { user: { select: { id: true, name: true, email: true } } },
       },

@@ -37,6 +37,7 @@ model User {
   tvShowRatings        TvShowRating[]           @relation("TvShowRatings")
   watchedEpisodes      WatchedEpisode[]         @relation("WatchedEpisodes")
   ownedTvShows         TvShow[]                 @relation("OwnedTvShows")
+  profiledTvShows      TvShow[]                 @relation("ShowProfileUser")
   createdSkills        Skill[]                  @relation("CreatedSkills")
   ownedSkills          Skill[]                  @relation("OwnedSkills")
   favouriteSkills      UserSkillFavourite[]     @relation("SkillFavourites")
@@ -181,6 +182,8 @@ model TvShow {
   watchMode   WatchMode    @default(HOUSEHOLD)
   ownerId     String?
   owner       User?        @relation("OwnedTvShows", fields: [ownerId], references: [id], onDelete: SetNull)
+  profileUserId String?
+  profileUser   User?      @relation("ShowProfileUser", fields: [profileUserId], references: [id], onDelete: SetNull)
   tmdbRating  Float?
   imdbRating  Float?
   firstAirDate DateTime?
