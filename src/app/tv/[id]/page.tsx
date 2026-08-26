@@ -2,9 +2,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Television, Star } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
-import { getShowById, getChannels } from "@/lib/tv-actions";
+import { getShowById, getChannels, getFamilyMembers } from "@/lib/tv-actions";
 import ShowStarRating from "./show-star-rating";
 import ChannelSelector from "./channel-selector";
+import ProfileSelector from "./profile-selector";
 import ShowActions from "./show-actions";
 import SeasonSection from "./season-section";
 
@@ -17,7 +18,11 @@ export default async function ShowDetailPage({
   if (!session) redirect("/login");
 
   const { id } = await params;
-  const [show, channels] = await Promise.all([getShowById(id), getChannels()]);
+  const [show, channels, familyMembers] = await Promise.all([
+    getShowById(id),
+    getChannels(),
+    getFamilyMembers(),
+  ]);
   if (!show) notFound();
 
   const user = session.user;
@@ -146,18 +151,32 @@ export default async function ShowDetailPage({
             )}
           </div>
 
-          {/* Channel */}
+          {/* Channel and Profile */}
           {!isReadOnly && (
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
-                Watching on
-              </p>
-              <div className="mt-2">
-                <ChannelSelector
-                  showId={show.id}
-                  currentChannelId={show.channelId}
-                  channels={channels}
-                />
+            <div className="flex flex-wrap gap-6">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                  Watching on
+                </p>
+                <div className="mt-2">
+                  <ChannelSelector
+                    showId={show.id}
+                    currentChannelId={show.channelId}
+                    channels={channels}
+                  />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                  Profile
+                </p>
+                <div className="mt-2">
+                  <ProfileSelector
+                    showId={show.id}
+                    currentUserId={show.profileUserId}
+                    members={familyMembers}
+                  />
+                </div>
               </div>
             </div>
           )}

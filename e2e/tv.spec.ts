@@ -284,6 +284,20 @@ test.describe("TV Shows Module", () => {
       ).toBeVisible();
     });
 
+    test("has profile selector dropdown", async ({ adminPage }) => {
+      await adminPage.goto("/tv");
+      await adminPage
+        .getByRole("link", { name: /Breaking Bad/ })
+        .first()
+        .click();
+
+      await expect(adminPage.getByText("Profile")).toBeVisible();
+      const select = adminPage.locator("select", {
+        has: adminPage.locator('option', { hasText: "No profile" }),
+      });
+      await expect(select).toBeVisible();
+    });
+
     test("has status selector with all options", async ({ adminPage }) => {
       await adminPage.goto("/tv");
       await adminPage
@@ -700,6 +714,30 @@ test.describe("TV Shows Module", () => {
 
       // Change back to WATCHING for other tests
       await statusSelect.selectOption("WATCHING");
+    });
+
+    test("can change and persist the show profile", async ({ adminPage }) => {
+      await adminPage.goto("/tv");
+      await adminPage
+        .getByRole("link", { name: /Breaking Bad/ })
+        .first()
+        .click();
+
+      const profileSelect = adminPage.locator("select", {
+        has: adminPage.locator("option", { hasText: "No profile" }),
+      });
+      const optionCount = await profileSelect.locator("option").count();
+      test.skip(optionCount < 2, "No family members available to select");
+
+      await profileSelect.selectOption({ index: 1 });
+      const selectedValue = await profileSelect.inputValue();
+
+      // After reload the profile selection should persist
+      await adminPage.reload();
+      await expect(profileSelect).toHaveValue(selectedValue);
+
+      // Reset back to no profile for other tests
+      await profileSelect.selectOption("");
     });
 
     test("can remove a show", async ({ adminPage }) => {
