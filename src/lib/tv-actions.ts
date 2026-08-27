@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getShowDetails, getExternalIds, getSeasonDetails, searchShows as tmdbSearch, type TmdbSearchResult } from "@/lib/tmdb";
 import { TvShowStatus, WatchMode } from "@/generated/prisma";
+import { pickNextEpisodePerShow } from "@/lib/tv-up-next";
 
 async function requireAuth() {
   const session = await auth();
@@ -352,12 +353,7 @@ export async function getUpNextEpisodes(limit = 10) {
     },
   });
 
-  // Flatten to get the first unwatched aired episode per show
-  const episodes = shows
-    .flatMap((show) => show.seasons.flatMap((season) => season.episodes))
-    .slice(0, limit);
-
-  return episodes;
+  return pickNextEpisodePerShow(shows).slice(0, limit);
 }
 
 export async function getShowsWithStatus(status: TvShowStatus) {
