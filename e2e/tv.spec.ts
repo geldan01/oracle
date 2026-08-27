@@ -454,6 +454,45 @@ test.describe("TV Shows Module", () => {
       }
     });
 
+    test("can unmark all watched episodes for a season", async ({
+      adminPage,
+    }) => {
+      await adminPage.goto("/tv");
+      await adminPage
+        .getByRole("link", { name: /Breaking Bad/ })
+        .first()
+        .click();
+
+      // Find a season that isn't all watched, expand it, and mark it all watched
+      const seasonButtons = adminPage.getByRole("button", {
+        name: /Season \d/,
+      });
+      const count = await seasonButtons.count();
+
+      for (let i = 0; i < count; i++) {
+        await seasonButtons.nth(i).click();
+        const markAllBtn = adminPage.getByRole("button", {
+          name: "Mark all watched",
+        });
+        if (await markAllBtn.isVisible()) {
+          await markAllBtn.click();
+
+          // Once fully watched, an "Unmark all watched" option should appear
+          const unmarkAllBtn = adminPage.getByRole("button", {
+            name: "Unmark all watched",
+          });
+          await expect(unmarkAllBtn).toBeVisible();
+          await unmarkAllBtn.click();
+
+          // Mark all watched should reappear once episodes are cleared
+          await expect(markAllBtn).toBeVisible();
+          return;
+        }
+        // Collapse and try next
+        await seasonButtons.nth(i).click();
+      }
+    });
+
     test("episode row links to episode detail page", async ({
       adminPage,
     }) => {

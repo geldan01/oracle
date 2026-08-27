@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { CaretDown } from "@phosphor-icons/react";
-import { markSeasonWatched } from "@/lib/tv-actions";
+import { markSeasonWatched, unmarkSeasonWatched } from "@/lib/tv-actions";
 import EpisodeRow from "./episode-row";
 
 interface SeasonSectionProps {
@@ -44,6 +44,12 @@ export default function SeasonSection({
     });
   }
 
+  function handleUnmarkAll() {
+    startTransition(async () => {
+      await unmarkSeasonWatched(season.id);
+    });
+  }
+
   return (
     <div className="border-b border-stone-200 last:border-b-0 dark:border-stone-800">
       <button
@@ -67,16 +73,28 @@ export default function SeasonSection({
       </button>
       {open && (
         <div className="pb-3">
-          {!readOnly && !allWatched && (
-            <div className="flex justify-end pb-2">
-              <button
-                type="button"
-                onClick={handleMarkAll}
-                disabled={isPending}
-                className="text-xs text-emerald-600 transition-colors hover:text-emerald-700 active:scale-[0.98] disabled:opacity-50 dark:text-emerald-400 dark:hover:text-emerald-300"
-              >
-                {isPending ? "Marking…" : "Mark all watched"}
-              </button>
+          {!readOnly && (watchedCount > 0 || !allWatched) && (
+            <div className="flex justify-end gap-4 pb-2">
+              {watchedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleUnmarkAll}
+                  disabled={isPending}
+                  className="text-xs text-stone-500 transition-colors hover:text-stone-700 active:scale-[0.98] disabled:opacity-50 dark:text-stone-400 dark:hover:text-stone-200"
+                >
+                  {isPending ? "Unmarking…" : "Unmark all watched"}
+                </button>
+              )}
+              {!allWatched && (
+                <button
+                  type="button"
+                  onClick={handleMarkAll}
+                  disabled={isPending}
+                  className="text-xs text-emerald-600 transition-colors hover:text-emerald-700 active:scale-[0.98] disabled:opacity-50 dark:text-emerald-400 dark:hover:text-emerald-300"
+                >
+                  {isPending ? "Marking…" : "Mark all watched"}
+                </button>
+              )}
             </div>
           )}
           {season.episodes.map((ep) => (

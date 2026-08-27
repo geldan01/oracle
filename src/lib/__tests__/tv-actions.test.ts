@@ -5,6 +5,15 @@ const { mockPrisma, mockAuth } = vi.hoisted(() => ({
     tvShow: {
       update: vi.fn(),
     },
+    tvSeason: {
+      findUniqueOrThrow: vi.fn(),
+    },
+    tvEpisode: {
+      findMany: vi.fn(),
+    },
+    watchedEpisode: {
+      deleteMany: vi.fn(),
+    },
     user: {
       findMany: vi.fn(),
     },
@@ -24,7 +33,7 @@ vi.mock("@/lib/auth", () => ({
   auth: mockAuth,
 }));
 
-import { getFamilyMembers, updateShowProfile } from "../tv-actions";
+import { getFamilyMembers, updateShowProfile, unmarkSeasonWatched } from "../tv-actions";
 
 const mockUser = { id: "user-1", email: "a@b.com", role: "MEMBER" };
 
@@ -78,6 +87,56 @@ describe("updateShowProfile", () => {
     expect(mockPrisma.tvShow.update).toHaveBeenCalledWith({
       where: { id: "show-1" },
       data: { profileUserId: null },
+    });
+  });
+});
+
+describe("unmarkSeasonWatched", () => {
+  function mockSeason(watchMode: "INDIVIDUAL" | "HOUSEHOLD") {
+    mockPrisma.tvSeason.findUniqueOrThrow.mockResolvedValue({
+      show: { watchMode },
+    });
+    mockPrisma.tvEpisode.findMany.mockResolvedValue([
+      { id: "ep-1" },
+      { id: "ep-2" },
+    ]);
+  }
+
+  it("throws Unauthorized when no session", async () => {
+    mockAuth.mockResolvedValue(null);
+    await expect(unmarkSeasonWatched("season-1")).rejects.toThrow(
+      "Unauthorized"
+    );
+  });
+
+  it("only looks up episodes belonging to the given season", async () => {
+    mockSeason("INDIVIDUAL");
+
+    await unmarkSeasonWatched("season-1");
+
+    expect(mockPrisma.tvEpisode.findMany).toHaveBeenCalledWith({
+      where: { seasonId: "season-1" },
+      select: { id: true },
+    });
+  });
+
+  it("clears only the current user's watched rows for an individual-mode show", async () => {
+    mockSeason("INDIVIDUAL");
+
+    await unmarkSeasonWatched("season-1");
+
+    expect(mockPrisma.watchedEpisode.deleteMany).toHaveBeenCalledWith({
+      where: { episodeId: { in: ["ep-1", "ep-2"] }, userId: mockUser.id },
+    });
+  });
+
+  it("clears watched rows for every household member for a household-mode show", async () => {
+    mockSeason("HOUSEHOLD");
+
+    await unmarkSeasonWatched("season-1");
+
+    expect(mockPrisma.watchedEpisode.deleteMany).toHaveBeenCalledWith({
+      where: { episodeId: { in: ["ep-1", "ep-2"] } },
     });
   });
 });
