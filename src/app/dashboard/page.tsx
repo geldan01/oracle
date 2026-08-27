@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchWeather } from "@/lib/weather";
 import { getSystemSettings } from "@/lib/settings-actions";
+import { getUpNextEpisodes } from "@/lib/tv-actions";
 import MealPlanWidget from "./meal-plan-widget";
 import TvWidget from "./tv-widget";
 import SkillsWidget from "./skills-widget";
@@ -53,38 +54,7 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "asc" },
   });
 
-  const upNextEpisodes = await prisma.tvEpisode.findMany({
-    where: {
-      airDate: { lte: today },
-      season: {
-        show: {
-          status: "WATCHING",
-          OR: [{ watchMode: "HOUSEHOLD" }, { ownerId: user.id }],
-        },
-      },
-      watchedBy: { none: { userId: user.id } },
-    },
-    orderBy: { airDate: "desc" },
-    take: 10,
-    distinct: ["seasonId"],
-    include: {
-      season: {
-        select: {
-          seasonNumber: true,
-          show: { select: { id: true, name: true, posterPath: true } },
-        },
-      },
-    },
-  });
-
-  const seenShows = new Set<string>();
-  const dedupedEpisodes = upNextEpisodes
-    .filter((ep) => {
-      if (seenShows.has(ep.season.show.id)) return false;
-      seenShows.add(ep.season.show.id);
-      return true;
-    })
-    .sort((a, b) => a.season.show.name.localeCompare(b.season.show.name));
+  const upNextEpisodes = await getUpNextEpisodes();
 
   const dashboardSkills = await prisma.skill.findMany({
     where: { favouritedBy: { some: { userId: user.id } } },
@@ -142,7 +112,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-x-12 gap-y-12 lg:grid-cols-3">
         {/* Up Next — featured */}
         <div className="order-2 lg:order-1 lg:col-span-2">
-          <TvWidget episodes={dedupedEpisodes} />
+          <TvWidget episodes={upNextEpisodes} />
         </div>
 
         {/* Weather — top right (top on mobile) */}
