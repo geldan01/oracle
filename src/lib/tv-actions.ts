@@ -279,9 +279,7 @@ export async function toggleWatchedEpisode(episodeId: string) {
   revalidatePath("/dashboard");
 }
 
-export async function markSeasonWatched(seasonId: string) {
-  const user = await requireAuth();
-
+async function getSeasonWatchContext(seasonId: string) {
   const season = await prisma.tvSeason.findUniqueOrThrow({
     where: { id: seasonId },
     select: { show: { select: { watchMode: true } } },
@@ -292,6 +290,13 @@ export async function markSeasonWatched(seasonId: string) {
     where: { seasonId },
     select: { id: true },
   });
+
+  return { isHousehold, episodes };
+}
+
+export async function markSeasonWatched(seasonId: string) {
+  const user = await requireAuth();
+  const { isHousehold, episodes } = await getSeasonWatchContext(seasonId);
 
   if (isHousehold) {
     const userIds = await getAllUserIds();
@@ -310,6 +315,21 @@ export async function markSeasonWatched(seasonId: string) {
       });
     }
   }
+
+  revalidatePath("/tv");
+  revalidatePath("/dashboard");
+}
+
+export async function unmarkSeasonWatched(seasonId: string) {
+  const user = await requireAuth();
+  const { isHousehold, episodes } = await getSeasonWatchContext(seasonId);
+
+  await prisma.watchedEpisode.deleteMany({
+    where: {
+      episodeId: { in: episodes.map((ep) => ep.id) },
+      ...(isHousehold ? {} : { userId: user.id }),
+    },
+  });
 
   revalidatePath("/tv");
   revalidatePath("/dashboard");
