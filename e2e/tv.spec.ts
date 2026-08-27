@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { test, expect } from "./fixtures";
 
 test.describe("TV Shows Module", () => {
@@ -657,6 +658,102 @@ test.describe("TV Shows Module", () => {
       await expect(
         adminPage.getByRole("link", { name: "Back to show" })
       ).toBeVisible();
+    });
+  });
+
+  // ── Episode Navigation Across Seasons (issue #5) ──
+
+  test.describe("Episode navigation across seasons", () => {
+    // Adding a show pulls every season/episode from TMDB, so do it once,
+    // keep these tests off each other's toes, and allow for the slow sync.
+    test.describe.configure({ mode: "serial", timeout: 120000 });
+
+    // Self-contained: ensures the show exists rather than relying on test order.
+    // Uses the "all" filter because a freshly added show defaults to the
+    // household watch mode and is hidden from the default "mine" view.
+    async function openBreakingBad(adminPage: Page) {
+      await adminPage.goto("/tv?filter=all");
+      const showLink = adminPage
+        .getByRole("link", { name: /Breaking Bad/ })
+        .first();
+
+      if (!(await showLink.isVisible().catch(() => false))) {
+        await adminPage
+          .locator('input[placeholder^="Search TMDB"]')
+          .fill("Breaking Bad");
+        const result = adminPage.locator("ul.absolute button").first();
+        await result.waitFor({ timeout: 15000 });
+        await result.click();
+        // The full TMDB sync (all seasons + episodes) can take a while; the
+        // dropdown closes once it resolves.
+        await expect(result).toBeHidden({ timeout: 60000 });
+        await adminPage.reload();
+        await expect(showLink).toBeVisible({ timeout: 15000 });
+      }
+
+      const showPath = await showLink.getAttribute("href");
+      await showLink.click();
+      await expect(
+        adminPage.getByRole("heading", { name: "Breaking Bad" })
+      ).toBeVisible();
+
+      // Read the season → episode-count map straight off the season headers
+      // ("Season 1 0/7"), so the tests don't hardcode TMDB's numbering and
+      // don't depend on the client-side expand animation.
+      const headers = await adminPage
+        .getByRole("button", { name: /Season \d+\s+\d+\/\d+/ })
+        .allInnerTexts();
+      const seasons = headers
+        .map((t) => t.match(/Season (\d+)\s+\d+\/(\d+)/))
+        .filter((m): m is RegExpMatchArray => m !== null)
+        .map((m) => ({ number: Number(m[1]), episodes: Number(m[2]) }))
+        .sort((a, b) => a.number - b.number);
+
+      return { showPath: showPath!, seasons };
+    }
+
+    test("Next from the last episode of a season lands on the next season", async ({
+      adminPage,
+    }) => {
+      const { showPath, seasons } = await openBreakingBad(adminPage);
+      const s1 = seasons[0];
+
+      await adminPage.goto(`${showPath}/season/1/episode/${s1.episodes}`);
+      await adminPage.getByRole("link", { name: "Next →" }).click();
+
+      await expect(adminPage).toHaveURL(`${showPath}/season/2/episode/1`);
+      await expect(adminPage.getByText("S2E1")).toBeVisible();
+    });
+
+    test("Previous from the first episode of a season lands on the prior season", async ({
+      adminPage,
+    }) => {
+      const { showPath, seasons } = await openBreakingBad(adminPage);
+      const s1 = seasons[0];
+
+      await adminPage.goto(`${showPath}/season/2/episode/1`);
+      await adminPage.getByRole("link", { name: "← Previous" }).click();
+
+      await expect(adminPage).toHaveURL(
+        `${showPath}/season/1/episode/${s1.episodes}`
+      );
+      await expect(adminPage.getByText(`S1E${s1.episodes}`)).toBeVisible();
+    });
+
+    test("the final episode shows an end-of-series note instead of a broken Next link", async ({
+      adminPage,
+    }) => {
+      const { showPath, seasons } = await openBreakingBad(adminPage);
+      const last = seasons[seasons.length - 1];
+
+      await adminPage.goto(
+        `${showPath}/season/${last.number}/episode/${last.episodes}`
+      );
+
+      await expect(adminPage.getByText(/no further episodes/i)).toBeVisible();
+      await expect(
+        adminPage.getByRole("link", { name: "Next →" })
+      ).toHaveCount(0);
     });
   });
 

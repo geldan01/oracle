@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAdjacentEpisodes } from "@/lib/episode-navigation";
 import EpisodeWatchedToggle from "./episode-watched-toggle";
 
 export default async function EpisodeDetailPage({
@@ -41,6 +42,21 @@ export default async function EpisodeDetailPage({
     },
   });
   if (!episode) notFound();
+
+  const seasons = await prisma.tvSeason.findMany({
+    where: { showId },
+    select: {
+      seasonNumber: true,
+      episodes: { select: { episodeNumber: true } },
+    },
+  });
+  const { previous, next } = getAdjacentEpisodes(
+    seasons.map((s) => ({
+      seasonNumber: s.seasonNumber,
+      episodeNumbers: s.episodes.map((e) => e.episodeNumber),
+    })),
+    { seasonNumber: season.seasonNumber, episodeNumber: episode.episodeNumber },
+  );
 
   const watched = episode.watchedBy.length > 0;
   const aired = episode.airDate && episode.airDate <= new Date();
@@ -126,10 +142,10 @@ export default async function EpisodeDetailPage({
       </div>
 
       {/* Navigation */}
-      <div className="mt-12 flex items-center justify-between border-t border-stone-200 pt-6 dark:border-stone-800">
-        {episode.episodeNumber > 1 ? (
+      <div className="mt-12 flex items-center justify-between gap-4 border-t border-stone-200 pt-6 dark:border-stone-800">
+        {previous ? (
           <Link
-            href={`/tv/${show.id}/season/${season.seasonNumber}/episode/${episode.episodeNumber - 1}`}
+            href={`/tv/${show.id}/season/${previous.seasonNumber}/episode/${previous.episodeNumber}`}
             className="text-sm text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
           >
             ← Previous
@@ -143,12 +159,18 @@ export default async function EpisodeDetailPage({
         >
           Back to show
         </Link>
-        <Link
-          href={`/tv/${show.id}/season/${season.seasonNumber}/episode/${episode.episodeNumber + 1}`}
-          className="text-sm text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-        >
-          Next →
-        </Link>
+        {next ? (
+          <Link
+            href={`/tv/${show.id}/season/${next.seasonNumber}/episode/${next.episodeNumber}`}
+            className="text-sm text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+          >
+            Next →
+          </Link>
+        ) : (
+          <span className="text-right text-sm italic text-stone-400 dark:text-stone-500">
+            You’ve reached the end — there are no further episodes.
+          </span>
+        )}
       </div>
     </div>
   );
